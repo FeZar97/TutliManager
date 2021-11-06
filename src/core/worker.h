@@ -66,7 +66,10 @@ public:
     cv::Mat                 mapAreaImage;
     cv::Mat                 currentMapMat;
     bool                    canSaveCurrentMap{false};
-    std::vector<cv::Mat>    mapTemplates;
+
+    std::vector<cv::Mat>    mapHeaderTemplates;
+    std::vector<cv::Mat>    enemyBaseTemplates;
+    std::vector<cv::Mat>    unionBaseTemplates;
 
     WORKER();
 
@@ -83,6 +86,7 @@ public:
     void                    process();
     bool                    makeScreenshot(); // скрин+бан
     void                    detectCurrentMap();
+    void                    detectMapNameAndBaseLocation();
     void                    saveMapArea();
 
     BITMAPINFOHEADER        createBitmapHeader(int width, int height);

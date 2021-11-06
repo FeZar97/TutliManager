@@ -22,11 +22,17 @@ WORKER::WORKER()
         tutliClient = hWnd;
     }
 
-    // read and save map templates
+    // read and save templates
     for(size_t i = 0; i < sizeof(sizes) / sizeof(int); i++)
     {
         cv::Mat mapHeaderTempl = cv::imread((QString("C:/FeZar97/TutliManager/src/res/mapsParts/%1.bmp").arg(sizes[i])).toStdString());
-        mapTemplates.push_back(mapHeaderTempl);
+        mapHeaderTemplates.push_back(mapHeaderTempl);
+
+        cv::Mat enemyBaseTempl = cv::imread((QString("C:/FeZar97/TutliManager/src/res/red_spawn/%1.bmp").arg(sizes[i])).toStdString());
+        enemyBaseTemplates.push_back(enemyBaseTempl);
+
+        cv::Mat unionBaseTempl = cv::imread((QString("C:/FeZar97/TutliManager/src/res/green_spawn/%1.bmp").arg(sizes[i])).toStdString());
+        unionBaseTemplates.push_back(unionBaseTempl);
     }
 
     screenTimer.setInterval(SCREEN_INTERVAL);
@@ -149,7 +155,7 @@ cv::Mat WORKER::captureScreenMat(HWND hwnd)
 void WORKER::screenCurrentTank()
 {
     // курсор в центр
-    moveMouseToCoords( screenGeometry.width() / 2,  screenGeometry.height() / 2);
+    moveMouseToCoords(screenGeometry.width() / 2,  screenGeometry.height() / 2);
 
     getScreenRegion(TANK_SELECT_REGION_BEGIN_X + TANK_SELECT_BETWEEN_REGION_WIDTH * (currentTank - 1) +  TANK_SELECT_REGION_WIDTH * (currentTank - 1),
                     TANK_SELECT_REGION_BEGIN_Y,
@@ -246,7 +252,7 @@ void WORKER::detectCurrentMap()
     int match_method = cv::TM_CCORR_NORMED;
 
     // get max map area
-    int maxMapSize = sizes[mapTemplates.size() - 1];
+    int maxMapSize = sizes[mapHeaderTemplates.size() - 1];
     mapAreaImage = lastScreen({lastScreen.size().width - maxMapSize,
                                lastScreen.size().height - maxMapSize,
                                maxMapSize,
@@ -258,14 +264,14 @@ void WORKER::detectCurrentMap()
     int bestMapSizeIdx = -1;
     cv::Point mapCorner;
     canSaveCurrentMap = false;
-    for(int mapFindIter = 0; mapFindIter < mapTemplates.size(); mapFindIter++)
+    for(size_t mapFindIter = 0; mapFindIter < mapHeaderTemplates.size(); mapFindIter++)
     {
-        currentMapMat = cv::Mat(cv::Size(mapAreaImage.size().width - mapTemplates[mapFindIter].size().width + 1,
-                                         mapAreaImage.size().height - mapTemplates[mapFindIter].size().height + 1),
+        currentMapMat = cv::Mat(cv::Size(mapAreaImage.size().width - mapHeaderTemplates[mapFindIter].size().width + 1,
+                                         mapAreaImage.size().height - mapHeaderTemplates[mapFindIter].size().height + 1),
                                       CV_32FC1);
 
         // ищем нужный шаблон
-        matchTemplate(mapAreaImage, mapTemplates[mapFindIter], currentMapMat, match_method);
+        matchTemplate(mapAreaImage, mapHeaderTemplates[mapFindIter], currentMapMat, match_method);
         // normalize(findMapCornerResult, findMapCornerResult, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
 
         double minVal, maxVal;
@@ -288,7 +294,7 @@ void WORKER::detectCurrentMap()
 
     if(bestMapSizeIdx != -1)
     {
-        qDebug() << QString("Best match for size %1 [%2x%2] result maxVal: %3").arg(bestMapSizeIdx).arg(sizes[bestMapSizeIdx]).arg(bestMatchVal);
+        // qDebug() << QString("Best match for size %1 [%2x%2] result maxVal: %3").arg(bestMapSizeIdx).arg(sizes[bestMapSizeIdx]).arg(bestMatchVal);
         canSaveCurrentMap = true;
         currentMapMat = lastScreen({lastScreen.size().width - sizes[bestMapSizeIdx],
                                           lastScreen.size().height - sizes[bestMapSizeIdx],
@@ -301,6 +307,11 @@ void WORKER::detectCurrentMap()
         //           cv::Scalar(255, 0, 0),
         //           3);
     }
+}
+
+void WORKER::detectMapNameAndBaseLocation()
+{
+
 }
 
 void WORKER::saveMapArea()
