@@ -5,11 +5,13 @@
 #include <QDebug>
 #include <QtWinExtras>
 #include <QTime>
+#include <QScreen>
+
 #include <windows.h>
 
-#include "converter.h"
+#include "src/core/converter.h"
 
-#define SCREEN_INTERVAL                      5000
+#define SCREEN_INTERVAL                      2000
 
 #define MOUSE_SINGLE_STEP_DX                 5
 #define MOUSE_SINGLE_STEP_DY                 5
@@ -35,10 +37,8 @@
 #define TUTLBOT_HOME_DIR                     "C:/TUTL/"
 
 // размеры миникарты в пикселях для различных масштабов (разрешение 1920х1080)
-constexpr static int sizes[] = {228, 278, 328, 406, 506, 628};
-
-enum PLACE{ VONGARE,
-             NAVOINE};
+constexpr static int sizes[]{227, 277, 327, 407, 507, 627};
+const static char cTutlsProcessName[]{"WoT Client"};
 
 class WORKER : public QObject{
     Q_OBJECT
@@ -50,23 +50,23 @@ public:
     WORD                    xCur;
     WORD                    yCur;
 
-    PLACE                   currentPlace;
-
     QTimer                  screenTimer;
-    int                     mapSizeIdx;
 
-    int                     screenWidth;
-    int                     screenHeight;
+    QRect                   screenGeometry;
 
-    int                     tanksNumber;       // количество танков, на которых будет играть кликер
-    int                     currentTank;         // номер текущего танка
+    int                     tanksNumber;         // количество танков, на которых будет играть кликер
+    int                     currentTank{0};      // номер текущего танка
     QVector<QPair<int,int>> centersTanksRegions; // коориданты центров регионов танков
 
     int                     xBattleButton;
     int                     yBattleButton;
 
-    QImage                  lastScreen;
+    cv::Mat                 lastScreen;
     QImage                  currentTankImage;
+    cv::Mat                 mapAreaImage;
+    cv::Mat                 currentMapMat;
+    bool                    canSaveCurrentMap{false};
+    std::vector<cv::Mat>    mapTemplates;
 
     WORKER();
 
@@ -79,18 +79,18 @@ public:
     void                    getRandPosInRect(int *x, int *y, int rectX, int rectY, int rectW, int rectH);
     void                    getScreenRegion(int x0, int y0, int w, int h, QImage &img);
 
-    // обработка изображений
-    void                    processImage();
+    // обработка скрина
+    void                    process();
+    bool                    makeScreenshot(); // скрин+бан
+    void                    detectCurrentMap();
+    void                    saveMapArea();
 
-public slots:
+    BITMAPINFOHEADER        createBitmapHeader(int width, int height);
+    cv::Mat                 captureScreenMat(HWND hwnd);
+
     void                    enumerateTanks(int _tanksNumber); // перебор выбранного кол-ва танков в ангаре
     void                    startBattle(); // васьки в бой
-    void                    makeScreenshot(); // скрин+бан
     void                    screenCurrentTank(); // скрин текущего активного танка
-
-signals:
-    void                    showScreen();
-    void                    showCurrentTank();
 };
 
 #endif // WORKER_H

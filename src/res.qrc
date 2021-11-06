@@ -1,0 +1,22 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/mapsParts/227.bmp</file>
+        <file>res/mapsParts/277.bmp</file>
+        <file>res/mapsParts/327.bmp</file>
+        <file>res/mapsParts/407.bmp</file>
+        <file>res/mapsParts/507.bmp</file>
+        <file>res/mapsParts/627.bmp</file>
+        <file>res/green_spawn/227.bmp</file>
+        <file>res/green_spawn/277.bmp</file>
+        <file>res/green_spawn/327.bmp</file>
+        <file>res/green_spawn/407.bmp</file>
+        <file>res/green_spawn/507.bmp</file>
+        <file>res/green_spawn/627.bmp</file>
+        <file>res/red_spawn/227.bmp</file>
+        <file>res/red_spawn/map_277_22_57_09.bmp</file>
+        <file>res/red_spawn/map_327_22_57_17.bmp</file>
+        <file>res/red_spawn/map_407_22_57_27.bmp</file>
+        <file>res/red_spawn/map_507_22_57_29.bmp</file>
+        <file>res/red_spawn/map_627_22_57_33.bmp</file>
+    </qresource>
+</RCC>

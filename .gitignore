@@ -1,0 +1,10 @@
+# Files
+*.user
+*.autosave
+
+# Directories
+
+#forced untrack
+Update.bat
+machine_id.txt
+res.cpp

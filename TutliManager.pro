@@ -4,9 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
-QT       += winextras
-QT       += core
+QT       += core gui winextras core
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -27,36 +25,34 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-        main.cpp \
-        widget.cpp \
-    worker.cpp \
-    converter.cpp
+	src/main.cpp \
+	src/core/worker.cpp \
+	src/core/converter.cpp \
+	src/ui/widget.cpp
 
 HEADERS += \
-        widget.h \
-    worker.h \
-    converter.h
+	src/core/worker.h \
+	src/core/converter.h \
+	src/ui/widget.h
 
-FORMS += \
-        widget.ui
+FORMS +=
 
-LIBS += -luser32
+LIBS += -luser32 \
+	-lGdi32
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-INCLUDEPATH += C:\OpenCV\opencv\build\include
+INCLUDEPATH += C:\OpenCV\opencv-4.5.4\build\include
 
-LIBS += C:\OpenCV\opencv-build\bin\libopencv_core344.dll
-LIBS += C:\OpenCV\opencv-build\bin\libopencv_highgui344.dll
-LIBS += C:\OpenCV\opencv-build\bin\libopencv_imgcodecs344.dll
-LIBS += C:\OpenCV\opencv-build\bin\libopencv_imgproc344.dll
-LIBS += C:\OpenCV\opencv-build\bin\libopencv_features2d344.dll
-LIBS += C:\OpenCV\opencv-build\bin\libopencv_calib3d344.dll
-
-DISTFILES +=
+LIBS += C:\OpenCV\opencv-4.5.4\bin\lib\Debug\opencv_core454d.lib \
+	C:\OpenCV\opencv-4.5.4\bin\lib\Debug\opencv_imgproc454d.lib \
+	C:\OpenCV\opencv-4.5.4\bin\lib\Debug\opencv_imgcodecs454d.lib \
+# 	C:\OpenCV\opencv-4.5.4\bin\lib\Debug\opencv_highgui454d.lib \
+# 	C:\OpenCV\opencv-4.5.4\bin\lib\Debug\opencv_features2d454d.lib \
+# 	C:\OpenCV\opencv-4.5.4\bin\lib\Debug\opencv_calib3d454d.lib
 
 RESOURCES += \
-    res.qrc
+    src/res.qrc
