@@ -19,8 +19,8 @@ public:
     QThread  wrk_thread;
 
 signals:
-    void startTutlsEnumerate(int _tutlsNumber);
     void startBattle();
+    void startProcess();
 };
 
 #endif // WIDGET_H

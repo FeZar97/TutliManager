@@ -22,20 +22,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++11
+CONFIG += c++17
 
 SOURCES += \
 	src/main.cpp \
 	src/core/worker.cpp \
 	src/core/converter.cpp \
+	src/core/tutlscontroller.cpp \
 	src/ui/widget.cpp
 
 HEADERS += \
+	src/core/logger.h \
 	src/core/worker.h \
 	src/core/converter.h \
+	src/core/tutlscontroller.h \
 	src/ui/widget.h
-
-FORMS +=
 
 LIBS += -luser32 \
 	-lGdi32

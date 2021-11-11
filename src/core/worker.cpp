@@ -1,5 +1,6 @@
 #include <opencv2/imgcodecs.hpp>
-
+// #include <WinUser.h>
+#include "logger.h"
 #include "worker.h"
 
 WORKER::WORKER()
@@ -11,49 +12,28 @@ WORKER::WORKER()
     xCur = screenGeometry.width() / 2;
     yCur = screenGeometry.height() / 2;
 
-    // поиск процесса тутлов
-    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-    QString s = codec->toUnicode(cTutlsProcessName);
-    LPCWSTR lps = LPCWSTR(s.utf16());
+    tryFindTutliProcess();
 
-    HWND hWnd = FindWindow(nullptr, lps);
-    if(hWnd != nullptr)
-    {
-        tutliClient = hWnd;
-    }
-
-    mapHeaderTemplates.resize(sizeof(sizes) / sizeof(int));
-    enemyBaseTemplates.resize(sizeof(sizes) / sizeof(int));
-    unionBaseTemplates.resize(sizeof(sizes) / sizeof(int));
+    mapHeaderTemplates.resize(cMapSizesNb);
+    enemyBaseTemplates.resize(cMapSizesNb);
+    unionBaseTemplates.resize(cMapSizesNb);
 
     // read and save templates
-    for(size_t i = 0; i < sizeof(sizes) / sizeof(int); i++)
+    for(size_t i = 0; i < cMapSizesNb; i++)
     {
-        cv::imread((QString("C:/FeZar97/TutliManager/src/res/mapsParts/%1.bmp").arg(sizes[i])).toStdString()).convertTo(mapHeaderTemplates[i], CV_32FC4);
+        cv::imread((QString("C:/FeZar97/TutliManager/src/res/mapsParts/%1.bmp").arg(cMapSizes[i])).toStdString()).convertTo(mapHeaderTemplates[i], CV_32FC4);
         cv::cvtColor(mapHeaderTemplates[i], mapHeaderTemplates[i], cv::COLOR_BGRA2BGR);
-        // qDebug() << "type of mapHeaderTemplates[idx]: " << QString::fromStdString(static_cast<std::string>(cv::typeToString(mapHeaderTemplates[i].type())));
 
-        cv::imread((QString("C:/FeZar97/TutliManager/src/res/red_spawn/%1.bmp").arg(sizes[i])).toStdString()).convertTo(enemyBaseTemplates[i], CV_32FC4);
+        cv::imread((QString("C:/FeZar97/TutliManager/src/res/red_spawn/%1.bmp").arg(cMapSizes[i])).toStdString()).convertTo(enemyBaseTemplates[i], CV_32FC4);
         cv::cvtColor(enemyBaseTemplates[i], enemyBaseTemplates[i], cv::COLOR_BGRA2BGR);
 
-        cv::imread((QString("C:/FeZar97/TutliManager/src/res/green_spawn/%1.bmp").arg(sizes[i])).toStdString()).convertTo(unionBaseTemplates[i], CV_32FC4);
+        cv::imread((QString("C:/FeZar97/TutliManager/src/res/green_spawn/%1.bmp").arg(cMapSizes[i])).toStdString()).convertTo(unionBaseTemplates[i], CV_32FC4);
         cv::cvtColor(unionBaseTemplates[i], unionBaseTemplates[i], cv::COLOR_BGRA2BGR);
     }
 
-    screenTimer.setInterval(SCREEN_INTERVAL);
-    connect(&screenTimer, &QTimer::timeout, this, &WORKER::process);
-    screenTimer.start();
-}
-
-// вывод окна танков на передний план
-void WORKER::showTutliClient()
-{
-    if(tutliClient != nullptr){
-        ShowWindow(tutliClient, SW_RESTORE);
-        SetForegroundWindow(tutliClient);
-        SetCursorPos(xCur, yCur);
-        UpdateWindow(tutliClient);
-    }
+    // screenTimer.setInterval(SCREEN_INTERVAL);
+    // connect(&screenTimer, &QTimer::timeout, this, &WORKER::process);
+    // screenTimer.start();
 }
 
 // расчет координат для выбранного количества танков
@@ -95,6 +75,27 @@ void WORKER::getScreenRegion(int x0, int y0, int w, int h, QImage &img)
 {
     QScreen *screen = QGuiApplication::primaryScreen();
     img = screen->grabWindow(0, x0, y0, w, h).toImage();
+}
+
+// поиск процесса тутлов
+void WORKER::tryFindTutliProcess()
+{
+    if(tutliClient)
+    {
+        return;
+    }
+
+    if(HWND hWnd = FindWindow(nullptr, cTutlsProcessName);
+            hWnd != nullptr)
+    {
+        tutliClient = hWnd;
+        tutlsController.setTutlsProcess(hWnd);
+    }
+    else
+    {
+        log("Not found tutliClient");
+        tutliClient = nullptr;
+    }
 }
 
 // https://superkogito.github.io/blog/CaptureScreenUsingOpenCv.html
@@ -159,7 +160,7 @@ cv::Mat WORKER::captureScreenMat(HWND hwnd)
 // помещение курсора в центр и инициализация координат
 void WORKER::setInitialPosition(int x, int y)
 {
-    showTutliClient();
+    // showTutliClient();
 
     xCur = x;
     yCur = y;
@@ -200,9 +201,19 @@ void WORKER::startBattle()
 {
     if(tutliClient == nullptr) return;
     calcStartBattleButton();
-    showTutliClient();
+    // showTutliClient();
     moveMouseToCoords(xBattleButton, yBattleButton);
     leftClick();
+}
+
+void WORKER::startProcess()
+{
+    lastProcessTimestamp = QDateTime::currentMSecsSinceEpoch();
+    enableWork = true;
+    while (enableWork)
+    {
+        process();
+    }
 }
 
 // скрин+бан
@@ -210,9 +221,10 @@ bool WORKER::makeScreenshot()
 {
     if(!tutliClient)
     {
-        qDebug() << "Not found tutliClient";
         return false;
     }
+
+    qint64 beginTimestamp = QDateTime::currentMSecsSinceEpoch();
 
     // create dir if need
     if(!QDir(TUTLBOT_HOME_DIR).exists())
@@ -231,103 +243,99 @@ bool WORKER::makeScreenshot()
     // save origin
     // imwrite(curBaseFileName.toStdString() + "_origin.bmp", lastScreen);
 
+    qint64 endTimestamp = QDateTime::currentMSecsSinceEpoch();
+    log("[time] Duration of 'makeScreenshot': " + std::to_string(endTimestamp - beginTimestamp) + "ms");
     return true;
 }
 
 // определение текущего размера карты и сохранение области карты в currentMapMat
 void WORKER::detectCurrentMap()
 {
-    int match_method = cv::TM_CCORR_NORMED;
+    qint64 beginTimestamp = QDateTime::currentMSecsSinceEpoch();
 
     // get max map area
-    int maxMapSize = sizes[mapHeaderTemplates.size() - 1];
+    int maxMapSize = cMapSizes.back();
     mapAreaImage = lastScreen({lastScreen.size().width - maxMapSize,
                                lastScreen.size().height - maxMapSize,
                                maxMapSize,
                                maxMapSize});
 
-    double bestMatchVal = 0.;
-    cv::Point mapCorner;
     currentMapSizeIdx = -1;
-    isCurrentMapSizeDetect = false;
-    for(size_t mapFindIter = 0; mapFindIter < mapHeaderTemplates.size(); mapFindIter++)
+    double bestMatchVal = 0., minVal = 0., maxVal = 0.;
+    cv::Point mapCorner, minLoc, maxLoc;
+    size_t curTemplateIdx = 0;
+
+    // проход по всем шаблонам шапок мини карт и сверка их с текущей картой
+    for(auto mapHeaderTemplate: mapHeaderTemplates)
     {
-        currentMapMat = cv::Mat(cv::Size(mapAreaImage.size().width - mapHeaderTemplates[mapFindIter].size().width + 1,
-                                         mapAreaImage.size().height - mapHeaderTemplates[mapFindIter].size().height + 1),
+        // выделение памяти под результат матчинга+
+        currentMapMat = cv::Mat(cv::Size(maxMapSize - mapHeaderTemplate.size().width + 1,
+                                         maxMapSize - mapHeaderTemplate.size().height + 1),
                                 CV_32FC3);
 
-        // qDebug() << "type of mapAreaImage: " << QString::fromStdString(static_cast<std::string>(cv::typeToString(mapAreaImage.type())));
-        // qDebug() << "type of mapHeaderTemplates[idx]: " << QString::fromStdString(static_cast<std::string>(cv::typeToString(mapHeaderTemplates[mapFindIter].type())));
-        // qDebug() << "type of currentMapMat: " << QString::fromStdString(static_cast<std::string>(cv::typeToString(currentMapMat.type())));
-
         // ищем нужный шаблон
-        matchTemplate(mapAreaImage, mapHeaderTemplates[mapFindIter], currentMapMat, match_method);
-        // normalize(findMapCornerResult, findMapCornerResult, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
-
-        double minVal, maxVal;
-        cv::Point minLoc, maxLoc;
-
+        matchTemplate(mapAreaImage, mapHeaderTemplate, currentMapMat, cv::TM_CCORR_NORMED);
         minMaxLoc(currentMapMat, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
 
-        // qDebug() << QString("iter %1 d1, d2: (%2, %3)").arg(mapFindIter).arg(lastScreen.size().width - matchLoc.x).arg(lastScreen.size().height - matchLoc.y);
-        // qDebug() << QString("iter %1 [map size %2] result minVal: %3").arg(mapFindIter).arg(sizes[mapFindIter]).arg(minVal);
-        // qDebug() << QString("iter %1 [map size %2] result maxVal: %3").arg(mapFindIter).arg(sizes[mapFindIter]).arg(maxVal);
+        // log("For map size " + std::to_string(mapHeaderTemplate.size().width) + " match value: " + std::to_string(maxVal));
 
-        if(maxVal > bestMatchVal && maxLoc.x == maxLoc.y)
+        // для корректно найденного угла карты выполняется условие: (maxLoc.x == maxLoc.y)
+        if(maxVal > bestMatchVal && (maxLoc.x == maxLoc.y) && maxVal > 0.95)
         {
             bestMatchVal = maxVal;
-            currentMapSizeIdx = mapFindIter;
-            mapCorner = maxLoc;
+            currentMapSizeIdx = curTemplateIdx;
+        }
+        else
+        {
+            curTemplateIdx++;
         }
     }
 
-    if(currentMapSizeIdx >= 0 && currentMapSizeIdx < mapHeaderTemplates.size())
+    // на данном этапе должен быть известен currentMapSizeIdx
+    isCurrentMapSizeDetect = (currentMapSizeIdx >= 0 && currentMapSizeIdx < mapHeaderTemplates.size());
+    if(isCurrentMapSizeDetect)
     {
-        // qDebug() << QString("Best match for size %1 [%2x%2] result maxVal: %3").arg(bestMapSizeIdx).arg(sizes[bestMapSizeIdx]).arg(bestMatchVal);
-        qDebug() << QString("Current map size: %1").arg(sizes[currentMapSizeIdx]);
-        isCurrentMapSizeDetect = true;
-        currentMapMat = lastScreen({lastScreen.size().width - sizes[currentMapSizeIdx],
-                                          lastScreen.size().height - sizes[currentMapSizeIdx],
-                                          sizes[currentMapSizeIdx],
-                                          sizes[currentMapSizeIdx]});
-        // draw rect with current map
-        // rectangle(currentMapMat,
-        //           mapCorner,
-        //           cv::Point(mapCorner.x + sizes[bestMapSizeIdx], mapCorner.y + sizes[bestMapSizeIdx]),
-        //           cv::Scalar(255, 0, 0),
-        //           3);
+        // сохраняем размеры карт и объектов
+        currentMapSize = cMapSizes[currentMapSizeIdx];
+        currentBaseSize = cBaseSizes[currentMapSizeIdx];
+
+        // log("Best match for size " + std::to_string(currentMapSize) + " with match result " + std::to_string(bestMatchVal));
+        log("Current map size: " + std::to_string(currentMapSize));
+        // log("Current base size: " + std::to_string(currentBaseSize));
+
+        // сохранение текущей карты в Mat
+        currentMapMat = lastScreen({lastScreen.size().width - currentMapSize,
+                                    lastScreen.size().height - currentMapSize,
+                                    currentMapSize,
+                                    currentMapSize});
 
         // save current map area
-        // if(isCurrentMapSizeDetect)
-        // {
-        //     imwrite(QString("%1_map_%2.bmp").arg(curBaseFileName).arg(sizes[currentMapSizeIdx]).toStdString(), currentMapMat);
-        // }
+        // imwrite(QString("%1_map_%2.bmp").arg(curBaseFileName).arg(currentMapSize).toStdString(), currentMapMat);
     }
     else
     {
-        qDebug() << "invalid map idx: " << currentMapSizeIdx;
+        log("Cant detect map idx");
     }
+
+    qint64 endTimestamp = QDateTime::currentMSecsSinceEpoch();
+    log("Duration of 'detectCurrentMap': " + std::to_string(endTimestamp - beginTimestamp) + "ms");
 }
 
-// для найденного масштаба карты ищем вражескую базу
-//
+// для найденного масштаба карты ищем базы и по относительным координатам баз определяем название карты
 void WORKER::detectMapNameAndBaseLocation()
 {
     if(!isCurrentMapSizeDetect)
     {
-        // qDebug() << "can't detect map name and base location";
         return;
     }
 
+    qint64 beginTimestamp = QDateTime::currentMSecsSinceEpoch();
+
     basesDetectSuccess = false;
 
-    basesMatchMapMat = cv::Mat(cv::Size(currentMapMat.size().width  - enemyBaseTemplates[currentMapSizeIdx].size().width  + 1,
-                                        currentMapMat.size().height - enemyBaseTemplates[currentMapSizeIdx].size().height + 1),
+    // инициализация для сохранения результата
+    basesMatchMapMat = cv::Mat(cv::Size(currentMapSize - currentBaseSize + 1, currentMapSize - currentBaseSize + 1),
                                CV_32FC3);
-
-    // qDebug() << "type of currentMapMat: " << QString::fromStdString(static_cast<std::string>(cv::typeToString(currentMapMat.type())));
-    // qDebug() << "type of enemyBaseTemplate: " << QString::fromStdString(static_cast<std::string>(cv::typeToString(enemyBaseTemplates[currentMapSizeIdx].type())));
-    // qDebug() << "type of basesMatchMapMat: " << QString::fromStdString(static_cast<std::string>(cv::typeToString(basesMatchMapMat.type())));
 
     double minVal, enemyMaxVal, unionMaxVal;
     cv::Point minLoc, enemyMaxLoc, unionMaxLoc;
@@ -342,96 +350,174 @@ void WORKER::detectMapNameAndBaseLocation()
     minMaxLoc(basesMatchMapMat, &minVal, &unionMaxVal, &minLoc, &unionMaxLoc, cv::Mat());
     // qDebug() << QString("Best match of union base: (%1, %2) with val %3").arg(unionMaxLoc.x).arg(unionMaxLoc.y).arg(unionMaxVal);
 
-    float distanceBetweenBases = QLineF({float(enemyMaxLoc.x), float(enemyMaxLoc.y)},
-                                        {float(unionMaxLoc.x), float(unionMaxLoc.y)}).length();
+    // вычисление относительный координат найденных баз
+    // делаем это для инвариантности расположения базы от размера карты
+    int halfBaseSize = currentBaseSize / 2;
+    QPointF enemyBaseCenterRCoords{(enemyMaxLoc.x + halfBaseSize) / float(currentMapSize),
+                                   (enemyMaxLoc.y + halfBaseSize) / float(currentMapSize)},
+            unionBaseCenterRCoords{(unionMaxLoc.x + halfBaseSize) / float(currentMapSize),
+                                   (unionMaxLoc.y + halfBaseSize) / float(currentMapSize)};
 
-    QPointF enemyBaseRCoords{enemyMaxLoc.x / float(currentMapMat.size().width), enemyMaxLoc.y / float(currentMapMat.size().height)},
-            unionBaseRCoords{unionMaxLoc.x / float(currentMapMat.size().width), unionMaxLoc.y / float(currentMapMat.size().height)};
+    // вычисляем относительную дистанцию между базами для принятия решения о корректности найденных баз
+    float relativeDistanceBetweenBases = QLineF(enemyBaseCenterRCoords, unionBaseCenterRCoords).length();
 
     if(enemyMaxVal < 0.85)
     {
-        qDebug() << QString("Can't find enemy base (%1)").arg(enemyMaxVal);
+        log("Can't find ENEMY base, max correlation val: " + std::to_string(enemyMaxVal));
     }
     else
     {
-        // define map name with ENEMY base rCoords
-        const std::map<std::string, QPair<QPointF, QPointF>> &curSizeMaps = basesRelativeCoords.at(sizes[currentMapSizeIdx]);
+        // поиск в словаре для текущего размера карты "похожих" координат
+        const std::map<std::string, QPair<QPointF, QPointF>> &curSizeMaps = basesRelativeCoords.at(cMapSizes[currentMapSizeIdx]);
         for(auto mapPair: curSizeMaps)
         {
             const QPair<QPointF, QPointF>& baseRPoints = mapPair.second;
             const QPointF &base1RPoint = baseRPoints.first,
                           &base2RPoint = baseRPoints.second;
 
-            if(QLineF(enemyBaseRCoords, base1RPoint).length() < 0.01 ||
-               QLineF(enemyBaseRCoords, base2RPoint).length() < 0.01)
+            if(QLineF(enemyBaseCenterRCoords, base1RPoint).length() < 0.01 ||
+               QLineF(enemyBaseCenterRCoords, base2RPoint).length() < 0.01)
             {
-                qDebug() << QString("Map name (by enemy base): %1").arg(QString::fromStdString(mapPair.first));
+                log("Map name (by enemy base): " + mapPair.first);
             }
         }
     }
 
     if(unionMaxVal < 0.85)
     {
-        qDebug() << QString("Can't find union base (%1)").arg(unionMaxVal);
+        log("Can't find UNION base, max correlation val: " + std::to_string(unionMaxVal));
     }
     else
     {
-        // define map name with UNION base rCoords
-        const std::map<std::string, QPair<QPointF, QPointF>> &curSizeMaps = basesRelativeCoords.at(sizes[currentMapSizeIdx]);
+        // поиск в словаре для текущего размера карты "похожих" координат
+        const std::map<std::string, QPair<QPointF, QPointF>> &curSizeMaps = basesRelativeCoords.at(cMapSizes[currentMapSizeIdx]);
         for(auto mapPair: curSizeMaps)
         {
             const QPair<QPointF, QPointF>& baseRPoints = mapPair.second;
             const QPointF &base1RPoint = baseRPoints.first,
                           &base2RPoint = baseRPoints.second;
 
-            if(QLineF(unionBaseRCoords, base1RPoint).length() < 0.01 ||
-               QLineF(unionBaseRCoords, base2RPoint).length() < 0.01)
+            if(QLineF(unionBaseCenterRCoords, base1RPoint).length() < 0.01 ||
+               QLineF(unionBaseCenterRCoords, base2RPoint).length() < 0.01)
             {
-                qDebug() << QString("Map name (by union base): %1").arg(QString::fromStdString(mapPair.first));
+                log("Map name (by union base): " + mapPair.first);
             }
         }
     }
 
-    if(distanceBetweenBases < 0.4 * float(currentMapMat.size().width))
+    if(relativeDistanceBetweenBases <= 0.25)
     {
-        qDebug() << QString("Too small distance between bases (%1)").arg(distanceBetweenBases);
+        log("Too small distance between bases: " + std::to_string(relativeDistanceBetweenBases));
     }
     else
     {
-        qDebug() << QString("Bases relative coords: {{%1, %2}, {%3, %4}}},")
-                    .arg(QString::number(enemyBaseRCoords.x(), 'f', 3)).arg(QString::number(enemyBaseRCoords.y(), 'f', 3))
-                    .arg(QString::number(unionBaseRCoords.x(), 'f', 3)).arg(QString::number(unionBaseRCoords.y(), 'f', 3));
+        // log("Cur bases relative coords: {{" +
+        //         std::to_string(enemyBaseCenterRCoords.x()) + ", " + std::to_string(enemyBaseCenterRCoords.y()) + "}, {" +
+        //         std::to_string(unionBaseCenterRCoords.x()) + ", " + std::to_string(unionBaseCenterRCoords.y())
+        //         + "}},"
+        //     );
 
-        // qDebug() << QString("Enemy relative base coord: (%1, %2)").arg(enemyBaseRCoords.x()).arg(enemyBaseRCoords.y());
-        // qDebug() << QString("Union relative base coord: (%1, %2)").arg(unionBaseRCoords.x()).arg(unionBaseRCoords.y());
+        if(curMapRelativeCoords.find(currentMapSize) == curMapRelativeCoords.end())
+        {
+            log("Save relative coords for size " + std::to_string(currentMapSize));
+            curMapRelativeCoords[currentMapSize] = {enemyBaseCenterRCoords, unionBaseCenterRCoords};
+
+            if(curMapRelativeCoords.size() == cMapSizesNb)
+            {
+                std::string result = "Result ready:\n";
+                for(auto sizePair: curMapRelativeCoords)
+                {
+                    result += "\tSize " + std::to_string(sizePair.first) + ": {{" +
+                              std::to_string(sizePair.second.first.x())  + ", " + std::to_string(sizePair.second.first.y()) + "}, {" +
+                              std::to_string(sizePair.second.second.x()) + ", " + std::to_string(sizePair.second.second.y())
+                              + "}},\n";
+                }
+
+                QFile resultFile(curBaseFileName + ".txt");
+                if(resultFile.open(QIODevice::WriteOnly))
+                {
+                    resultFile.write(QByteArray::fromStdString(result));
+                    resultFile.close();
+                }
+
+                log(result);
+                curMapRelativeCoords.clear();
+            }
+        }
+        else
+        {
+            // log("Relative coords for size " + std::to_string(currentMapSize) + " already exists");
+        }
+
+        // qDebug() << QString("Bases relative coords: {{%1, %2}, {%3, %4}}},")
+        //             .arg(QString::number(enemyBaseRCoords.x(), 'f', 3)).arg(QString::number(enemyBaseRCoords.y(), 'f', 3))
+        //             .arg(QString::number(unionBaseRCoords.x(), 'f', 3)).arg(QString::number(unionBaseRCoords.y(), 'f', 3));
     }
 
-    basesDetectSuccess = (enemyMaxVal >= 0.85) && (unionMaxVal >= 0.85) && (distanceBetweenBases > 0.4 * currentMapMat.size().width);
+    basesDetectSuccess = (enemyMaxVal >= 0.85) && (unionMaxVal >= 0.85) && (relativeDistanceBetweenBases > 0.4);
 
 // draw bases rects
     if(basesDetectSuccess)
     {
-        rectangle(currentMapMat, enemyMaxLoc,
-                  cv::Point(enemyMaxLoc.x + enemyBaseTemplates[currentMapSizeIdx].size().width,
-                            enemyMaxLoc.y + enemyBaseTemplates[currentMapSizeIdx].size().height),
-                  cv::Scalar(0, 0, 255), 1);
+        log("Both bases are successfull detected");
 
-        rectangle(currentMapMat, unionMaxLoc,
-                  cv::Point(unionMaxLoc.x + enemyBaseTemplates[currentMapSizeIdx].size().width,
-                            unionMaxLoc.y + enemyBaseTemplates[currentMapSizeIdx].size().height),
-                  cv::Scalar(0, 255, 0), 1);
+        // пытаемся зумить карту пока есть неизвестные координаты
+        if(curMapRelativeCoords.size() != cMapSizesNb)
+        {
+            // define orderMapScaleIteration
+            if(currentMapSize == cMapSizes.back())
+            {
+                zoomInIterations = false;
+            }
+            if(currentMapSize == cMapSizes.front())
+            {
+                zoomInIterations = true;
+            }
 
-    // save map area with bases detection
-        imwrite(QString("%1_bases.bmp").arg(curBaseFileName).toStdString(), currentMapMat);
+            // apply order
+            if(zoomInIterations)
+            {
+                tutlsController.zoomInMinimap();
+            }
+            else
+            {
+                tutlsController.zoomOutMinimap();
+            }
+        }
+
+        // rectangle(currentMapMat, enemyMaxLoc,
+        //           cv::Point(enemyMaxLoc.x + enemyBaseTemplates[currentMapSizeIdx].size().width,
+        //                     enemyMaxLoc.y + enemyBaseTemplates[currentMapSizeIdx].size().height),
+        //           cv::Scalar(0, 0, 255), 1);
+
+        // rectangle(currentMapMat, unionMaxLoc,
+        //           cv::Point(unionMaxLoc.x + enemyBaseTemplates[currentMapSizeIdx].size().width,
+        //                     unionMaxLoc.y + enemyBaseTemplates[currentMapSizeIdx].size().height),
+        //           cv::Scalar(0, 255, 0), 1);
+
+        // // save map area with bases detection
+        // imwrite(QString("%1_bases.bmp").arg(curBaseFileName).toStdString(), currentMapMat);
     }
-    else
-    {
-        qDebug() << "Can't detect bases";
-    }
+
+    qint64 endTimestamp = QDateTime::currentMSecsSinceEpoch();
+    log("Duration of 'detectMapNameAndBaseLocation': " + std::to_string(endTimestamp - beginTimestamp) + "ms");
 }
 
 void WORKER::process()
 {
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    qint64 dt = timestamp - lastProcessTimestamp;
+
+    if(dt < 150)
+    {
+        QThread::msleep(dt);
+        return;
+    }
+
+    log("New prcoess cycle");
+    lastProcessTimestamp = timestamp;
+    tryFindTutliProcess();
+
     if(makeScreenshot())
     {
         detectCurrentMap();
