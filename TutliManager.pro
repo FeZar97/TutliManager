@@ -26,12 +26,16 @@ CONFIG += c++17
 
 SOURCES += \
 	src/main.cpp \
+	src/core/mapsizedetector.cpp \
+	src/core/durationlogger.cpp \
 	src/core/worker.cpp \
 	src/core/converter.cpp \
 	src/core/tutlscontroller.cpp \
 	src/ui/widget.cpp
 
 HEADERS += \
+	src/core/mapsizedetector.h \
+	src/core/durationlogger.h \
 	src/core/logger.h \
 	src/core/worker.h \
 	src/core/converter.h \

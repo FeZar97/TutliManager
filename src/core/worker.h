@@ -11,10 +11,9 @@
 #include <windows.h>
 #include <map>
 
-#include "src/core/converter.h"
-#include "src/core/tutlscontroller.h"
-
-#define SCREEN_INTERVAL                      2000
+#include "converter.h"
+#include "tutlscontroller.h"
+#include "mapsizedetector.h"
 
 #define MOUSE_SINGLE_STEP_DX                 5
 #define MOUSE_SINGLE_STEP_DY                 5
@@ -40,12 +39,18 @@
 #define TUTLBOT_HOME_DIR                     "C:/TUTL/"
 
 // размеры миникарты в пикселях для разрешения 1920х1080
-const static std::vector<int> cMapSizes {227, 277, 327, 407, 507, 627};
 const static std::vector<int> cBaseSizes{ 24,  27,  30,  34,  40,  47};
-const static size_t cMapSizesNb{cMapSizes.size()};
 const static LPCWSTR cTutlsProcessName{L"WoT Client"};
 
 
+/* Вестфилд
+Size 227: {{0.251101, 0.841410}, {0.841410, 0.251101}},
+Size 277: {{0.241877, 0.841155}, {0.841155, 0.241877}},
+Size 327: {{0.235474, 0.840979}, {0.840979, 0.235474}},
+Size 407: {{0.228501, 0.840295}, {0.840295, 0.228501}},
+Size 507: {{0.222880, 0.840237}, {0.840237, 0.222880}},
+Size 627: {{0.218501, 0.840510}, {0.840510, 0.216906}},
+*/
 /* Жемчужная река
 Size 227: {{0.233480, 0.251101}, {0.806167, 0.810573}},
 Size 277: {{0.223827, 0.241877}, {0.805054, 0.808664}},
@@ -150,6 +155,14 @@ Size 407: {{0.515971, 0.122850}, {0.513514, 0.923833}},
 Size 507: {{0.512821, 0.116371}, {0.508876, 0.925049}},
 Size 627: {{0.510367, 0.111643}, {0.507177, 0.923445}},
 */
+/* Рыбацкая бухта
+Size 227: {{0.511013, 0.894273}, {0.449339, 0.162996}},
+Size 277: {{0.505415, 0.891697}, {0.440433, 0.151625}},
+Size 327: {{0.504587, 0.896024}, {0.440367, 0.140673}},
+Size 407: {{0.501229, 0.894349}, {0.434889, 0.132678}},
+Size 507: {{0.495069, 0.895464}, {0.429980, 0.130178}},
+Size 627: {{0.492823, 0.896332}, {0.427432, 0.121212}},
+*/
 /* Старая гавань
 Size 227: {{0.189427, 0.383260}, {0.841410, 0.387665}},
 Size 277: {{0.176895, 0.375451}, {0.837545, 0.379061}},
@@ -189,6 +202,14 @@ Size 327: {{0.195719, 0.828746}, {0.706422, 0.183486}},
 Size 407: {{0.186732, 0.830467}, {0.702703, 0.176904}},
 Size 507: {{0.181460, 0.828402}, {0.702170, 0.173570}},
 Size 627: {{0.175439, 0.829346}, {0.700159, 0.165869}},
+*/
+/* Харьков
+Size 227: {{0.568282, 0.140969}, {0.572687, 0.933921}},
+Size 277: {{0.559567, 0.126354}, {0.566787, 0.931408}},
+Size 327: {{0.559633, 0.122324}, {0.565749, 0.932722}},
+Size 407: {{0.555283, 0.113022}, {0.560197, 0.933661}},
+Size 507: {{0.552268, 0.106509}, {0.558185, 0.934911}},
+Size 627: {{0.550239, 0.102073}, {0.555024, 0.933014}},
 */
 /* Эль-Халлуф
 Size 227: {{0.215859, 0.823789}, {0.806167, 0.237885}},
@@ -245,23 +266,9 @@ class WORKER : public QObject{
 
 public:
     HWND                    tutliClient{nullptr};
-    LPDWORD                 tutliProcessId;
-    DWORD                   tutliThreadId;
-    WORD                    xCur;
-    WORD                    yCur;
 
     TutlsController         tutlsController;
-
-    QTimer                  screenTimer;
-
-    QRect                   screenGeometry;
-
-    int                     tanksNumber;         // количество танков, на которых будет играть кликер
-    int                     currentTank{0};      // номер текущего танка
-    QVector<QPair<int,int>> centersTanksRegions; // коориданты центров регионов танков
-
-    int                     xBattleButton;
-    int                     yBattleButton;
+    MapSizeDetector         mapSizeDetector;
 
     QString                 curBaseFileName;
 
@@ -269,7 +276,8 @@ public:
     cv::Mat                 mapAreaImage; // максимальная область с картой (627х627)
     cv::Mat                 currentMapMat; // текущий формат карты
     int                     currentMapSizeIdx; // индекс размера карты в массиве sizes
-    int                     currentMapSize; // фактичекий размер текущей карты
+    MapSizes                currentMapSize; // фактичекий размер текущей карты
+
     int                     currentBaseSize; // фактичекий размер баз для данного размера карты
     bool                    isCurrentMapSizeDetect; // флаг для проверки корректности найденной области с картой
     cv::Mat                 basesMatchMapMat; // карта с найденными базами
@@ -282,7 +290,6 @@ public:
     cv::Point               enemyBasePoint;
     cv::Point               unionBasePoint;
 
-    std::vector<cv::Mat>    mapHeaderTemplates;
     std::vector<cv::Mat>    enemyBaseTemplates;
     std::vector<cv::Mat>    unionBaseTemplates;
 
@@ -290,20 +297,11 @@ public:
     qint64                  lastProcessTimestamp;
     WORKER();
 
-    void                    setInitialPosition(int x, int y);
-    void                    moveMouseToCoords(int x, int y);
-    void                    leftClick();
-    void                    calcCentersOfRegions();
-    void                    calcStartBattleButton();
-    void                    getRandPosInRect(int *x, int *y, int rectX, int rectY, int rectW, int rectH);
-    void                    getScreenRegion(int x0, int y0, int w, int h, QImage &img);
-
     void                    tryFindTutliProcess();
 
     // обработка скрина
     void                    process();
     bool                    makeScreenshot(); // скрин+бан
-    void                    detectCurrentMap();
     void                    detectMapNameAndBaseLocation();
 
     BITMAPINFOHEADER        createBitmapHeader(int width, int height);
