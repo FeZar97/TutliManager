@@ -76,7 +76,7 @@ bool TutlsController::tryFindTutliProcess()
         tutlsHandler_ = hWnd;
         return true;
     }
-    log("Not found tutliClient");
+    Logger::log("Not found tutliClient");
     return false;
 }
 
@@ -91,7 +91,7 @@ void TutlsController::zoomInMinimap() const
     {
         return;
     }
-    log("Send zoom command: '+'");
+    Logger::log("Send zoom command: '+'");
     SendKyboardEvent(VK_OEM_PLUS, true);
     SendKyboardEvent(VK_OEM_PLUS, false);
 }
@@ -102,7 +102,7 @@ void TutlsController::zoomOutMinimap() const
     {
         return;
     }
-    log("Send zoom command: '-'");
+    Logger::log("Send zoom command: '-'");
     SendKyboardEvent(VK_OEM_MINUS, true);
     SendKyboardEvent(VK_OEM_MINUS, false);
 }
@@ -114,7 +114,7 @@ void TutlsController::startMoving(const MovingDirection direction) const
         return;
     }
 
-    log("Send start moving direction command: " + directionToStr(direction).toStdString());
+    Logger::log("Send start moving direction command: " + directionToStr(direction).toStdString());
 
     SendKyboardEvent(directionToVkKey(direction), true);
 }
@@ -126,7 +126,7 @@ void TutlsController::stopMoving(const MovingDirection direction) const
         return;
     }
 
-    log("Send stop moving direction command: " + directionToStr(direction).toStdString());
+    Logger::log("Send stop moving direction command: " + directionToStr(direction).toStdString());
 
     SendKyboardEvent(directionToVkKey(direction), false);
 }

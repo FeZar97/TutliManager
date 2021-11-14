@@ -6,8 +6,8 @@
 
 void BaseDetector::loadBasesTemplates()
 {
-    enemyBaseTemplates_.reserve(cMapSizesNb);
-    unionBaseTemplates_.reserve(cMapSizesNb);
+    enemyBaseTemplates_.resize(cMapSizesNb);
+    unionBaseTemplates_.resize(cMapSizesNb);
 
     for (size_t i = 0; i < cMapSizesNb; i++)
     {
@@ -54,7 +54,7 @@ BaseDetectionResult BaseDetector::detectBases(const cv::Mat & map, const MapSize
         || map.size().width != curMapSize // проверка на совпадение индекса размера и фактического размера
         || curBaseSize == -1) // проверка размера шаблона базы
     {
-        log("Invalid input data for method BaseDetector::detectBases");
+        Logger::log("Invalid input data for method BaseDetector::detectBases");
     }
 
     const cv::Mat & enemyBaseTemplate = enemyBaseTemplates_.at(mapSizeIdx),
@@ -95,15 +95,15 @@ BaseDetectionResult BaseDetector::detectBases(const cv::Mat & map, const MapSize
 
     // if (!isEnemyBaseDetectSuccess)
     // {
-    //     log("Can't find ENEMY base, max correlation val: " + std::to_string(enemyMaxVal));
+    //     Logger::log("Can't find ENEMY base, max correlation val: " + std::to_string(enemyMaxVal));
     // }
     // if (!isUnionBaseDetectSuccess)
     // {
-    //     log("Can't find UNION base, max correlation val: " + std::to_string(unionMaxVal));
+    //     Logger::log("Can't find UNION base, max correlation val: " + std::to_string(unionMaxVal));
     // }
     // if (!isDistanceThresholdCorrect)
     // {
-    //     log("Too small distance between bases: " + std::to_string(relativeDistanceBetweenBases));
+    //     Logger::log("Too small distance between bases: " + std::to_string(relativeDistanceBetweenBases));
     // }
 
     // найдены обе базы

@@ -7,6 +7,8 @@
 #include <chrono>
 #include <ctime>
 
+namespace Logger {
+
 static std::string getTimeStr(){
     std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
@@ -18,6 +20,8 @@ static std::string getTimeStr(){
 static void log(const std::string &message)
 {
     std::cout << getTimeStr() << ": " << message << std::endl;
+}
+
 }
 
 #endif // LOGGER_H

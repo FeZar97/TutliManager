@@ -120,7 +120,7 @@ void WORKER::process()
         return;
     }
 
-    log("New prcoess cycle");
+    Logger::log("New prcoess cycle");
     lastProcessTimestamp = timestamp;
     tutlsController_.tryFindTutliProcess();
 
@@ -156,7 +156,7 @@ void WORKER::process()
     // нужно для собирания относительных координат баз
     if (basesDetectionResult_ == BaseDetectionResult::BothBases)
     {
-        log("Both bases are successfull detected");
+        Logger::log("Both bases are successfull detected");
 
         int curMapSize = MapSizeDetector::mapIdxToSize(currentMapSizeIdx_);
 

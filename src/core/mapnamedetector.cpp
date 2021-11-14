@@ -121,7 +121,7 @@ MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPo
             // если для карты еще нет сохраненных координат
             if (rCoordsMap.empty())
             {
-                log("For map " + mapNameToStr(curMapName) + " not exist relative coords");
+                Logger::log("For map " + mapNameToStr(curMapName) + " not exist relative coords");
                 continue;
             }
 
@@ -157,24 +157,24 @@ MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPo
                 // стремный случай, такого не должно быть
                 else
                 {
-                    log("Unavailable case for map " + mapNameToStr(curMapName)
-                        + ", size " + std::to_string(curMapSize) + ", input coords: "
-                        + "p1{" + std::to_string(firstBaseRCoord.x())  + ", " + std::to_string(firstBaseRCoord.y())  + "}, "
-                        + "p2{" + std::to_string(secondBaseRCoord.x()) + ", " + std::to_string(secondBaseRCoord.y()) + "}");
+                    Logger::log("Unavailable case for map " + mapNameToStr(curMapName)
+                                + ", size " + std::to_string(curMapSize) + ", input coords: "
+                                + "p1{" + std::to_string(firstBaseRCoord.x())  + ", " + std::to_string(firstBaseRCoord.y())  + "}, "
+                                + "p2{" + std::to_string(secondBaseRCoord.x()) + ", " + std::to_string(secondBaseRCoord.y()) + "}");
                 }
             }
             // если не существует такой размер надо громко ругнуться
             else
             {
-                log("For size " + std::to_string(curMapSize) + " not exist relative coords (map name: "
-                    + mapNameToStr(curMapName) + ")");
+                Logger::log("For size " + std::to_string(curMapSize) + " not exist relative coords (map name: "
+                            + mapNameToStr(curMapName) + ")");
             }
         }
 
         // ВРЕМЯНКА нужно для собирания относительных координат баз
         if(curMapRelativeCoords.find(curMapSize) == curMapRelativeCoords.end())
         {
-            log("Save relative coords for size " + std::to_string(curMapSize));
+            Logger::log("Save relative coords for size " + std::to_string(curMapSize));
             curMapRelativeCoords[curMapSize] = {firstBaseRCoord, secondBaseRCoord};
 
             // как только собираем координаты для всех размеров - выводим результат
@@ -189,7 +189,7 @@ MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPo
                               + "}},\n";
                 }
 
-                log(result);
+                Logger::log(result);
             }
         }
 
@@ -213,7 +213,7 @@ MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPo
             // если для карты еще нет сохраненных координат
             if (rCoordsMap.empty())
             {
-                log("For map " + mapNameToStr(curMapName) + " not exist relative coords");
+                Logger::log("For map " + mapNameToStr(curMapName) + " not exist relative coords");
                 continue;
             }
 
@@ -237,8 +237,8 @@ MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPo
             // если не существует такой размер надо громко ругнуться
             else
             {
-                log("For size " + std::to_string(curMapSize) + " not exist relative coords (map name: "
-                    + mapNameToStr(curMapName) + ")");
+                Logger::log("For size " + std::to_string(curMapSize) + " not exist relative coords (map name: "
+                            + mapNameToStr(curMapName) + ")");
             }
         }
 

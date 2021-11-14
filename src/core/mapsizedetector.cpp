@@ -10,7 +10,7 @@ void MapSizeDetector::loadMapHeadersTemplates()
 
     for (size_t i = 0; i < cMapSizesNb; i++)
     {
-        cv::imread("/res/mapsParts/" + std::to_string(cMapSizes[i])).convertTo(mapHeaderTemplates_[i], CV_32FC4);
+        cv::imread("C:/FeZar97/TutliManager/src/res/mapsParts/" + std::to_string(cMapSizes[i]) + ".bmp").convertTo(mapHeaderTemplates_[i], CV_32FC4);
         cv::cvtColor(mapHeaderTemplates_[i], mapHeaderTemplates_[i], cv::COLOR_BGRA2BGR);
     }
 }
@@ -62,7 +62,7 @@ void MapSizeDetector::detectMapSize(const cv::Mat & matWithMap,
         matchTemplate(matWithMap, mapHeaderTemplate, currentMapMat, cv::TM_CCORR_NORMED);
         minMaxLoc(currentMapMat, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
 
-        // log("For map size " + std::to_string(mapHeaderTemplates_.size().width) + " match value: " + std::to_string(maxVal));
+        // Logger::log("For map size " + std::to_string(mapHeaderTemplates_.size().width) + " match value: " + std::to_string(maxVal));
 
         // для корректно найденного угла карты выполняется условие: (maxLoc.x == maxLoc.y)
         // эмпирически подобранный порог = 0.95 (фактические значения ~0.99)
@@ -79,8 +79,8 @@ void MapSizeDetector::detectMapSize(const cv::Mat & matWithMap,
     // на данном этапе должен быть известен currentMapSizeIdx
     if (isMapIdxCorrect(bestMapSizeIdx))
     {
-        // log("Best match for size " + std::to_string(currentMapSize) + " with match result " + std::to_string(bestMatchVal));
-        log("Current map size: " + std::to_string(mapIdxToSize(mapSizeIdx)));
+        // Logger::log("Best match for size " + std::to_string(currentMapSize) + " with match result " + std::to_string(bestMatchVal));
+        Logger::log("Current map size: " + std::to_string(mapIdxToSize(mapSizeIdx)));
 
         // сохранение текущей карты в Mat
         int currentMapSize = mapIdxToSize(bestMapSizeIdx);
@@ -91,6 +91,6 @@ void MapSizeDetector::detectMapSize(const cv::Mat & matWithMap,
     }
     else
     {
-        log("Cant detect map idx");
+        Logger::log("Cant detect map idx (incorrect idx " + std::to_string(bestMapSizeIdx) + ")");
     }
 }
