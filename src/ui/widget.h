@@ -19,7 +19,6 @@ public:
     QThread  wrk_thread;
 
 signals:
-    void startBattle();
     void startProcess();
 };
 

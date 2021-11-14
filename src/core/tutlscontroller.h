@@ -14,6 +14,8 @@ enum class MovingDirection
     Right
 };
 
+const static LPCWSTR cTutlsProcessName{L"WoT Client"};
+
 class TutlsController
 {
     HWND tutlsHandler_{nullptr};
@@ -24,10 +26,12 @@ class TutlsController
     int directionToVkKey(const MovingDirection direction) const;
 
 public:
-    TutlsController();
+    TutlsController() {};
 
-    void setTutlsProcess(HWND handler);
     bool showTutliWindow() const;
+
+    bool tryFindTutliProcess();
+    HWND getTutliProcess() const;
 
     // mini map
     void zoomInMinimap() const;

@@ -5,7 +5,7 @@
 
 void MapSizeDetector::loadMapHeadersTemplates()
 {
-    DurationLogger durationLogger("loadMapHeadersTemplates");
+    DurationLogger durationLogger("MapSizeDetector::loadMapHeadersTemplates");
     mapHeaderTemplates_.resize(cMapSizesNb);
 
     for (size_t i = 0; i < cMapSizesNb; i++)
@@ -15,10 +15,34 @@ void MapSizeDetector::loadMapHeadersTemplates()
     }
 }
 
+
+MapSizeIdx MapSizeDetector::mapSizeToIdx(const int mapSize)
+{
+    auto findRes = std::find(cMapSizes.begin(), cMapSizes.end(), mapSize);
+    if (findRes == cMapSizes.end())
+    {
+        return MapSizeIdx::SIZE_UNKNOWN;
+    }
+    else
+    {
+        return MapSizeIdx(findRes - cMapSizes.begin());
+    }
+}
+
+int MapSizeDetector::mapIdxToSize(const MapSizeIdx mapSizeIdx)
+{
+    return isMapIdxCorrect(mapSizeIdx) ? cMapSizes.at(mapSizeIdx) : -1;
+}
+
+bool MapSizeDetector::isMapIdxCorrect(const MapSizeIdx mapSizeIdx)
+{
+    return (mapSizeIdx >=0 && static_cast<size_t>(mapSizeIdx) < cMapSizes.size());
+}
+
 void MapSizeDetector::detectMapSize(const cv::Mat & matWithMap,
                                     MapSizeIdx & mapSizeIdx, cv::Mat & currentMapMat)
 {
-    DurationLogger durationLogger("detectMapSize");
+    DurationLogger durationLogger("MapSizeDetector::detectMapSize");
 
     double bestMatchVal = 0., minVal = 0., maxVal = 0.;
     cv::Point mapCorner, minLoc, maxLoc;
@@ -69,27 +93,4 @@ void MapSizeDetector::detectMapSize(const cv::Mat & matWithMap,
     {
         log("Cant detect map idx");
     }
-}
-
-MapSizeIdx MapSizeDetector::mapSizeToIdx(const int mapSize)
-{
-    auto findRes = std::find(cMapSizes.begin(), cMapSizes.end(), mapSize);
-    if (findRes == cMapSizes.end())
-    {
-        return MapSizeIdx::SIZE_UNKNOWN;
-    }
-    else
-    {
-        return MapSizeIdx(findRes - cMapSizes.begin());
-    }
-}
-
-int MapSizeDetector::mapIdxToSize(const MapSizeIdx mapSizeIdx)
-{
-    return isMapIdxCorrect(mapSizeIdx) ? cMapSizes.at(mapSizeIdx) : -1;
-}
-
-bool MapSizeDetector::isMapIdxCorrect(const MapSizeIdx mapSizeIdx)
-{
-    return (mapSizeIdx >=0 && static_cast<size_t>(mapSizeIdx) < cMapSizes.size());
 }

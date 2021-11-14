@@ -48,13 +48,6 @@ int TutlsController::directionToVkKey(const MovingDirection direction) const
     }
 }
 
-TutlsController::TutlsController() { }
-
-void TutlsController::setTutlsProcess(HWND handler)
-{
-    tutlsHandler_ = handler;
-}
-
 bool TutlsController::showTutliWindow() const
 {
     if(!tutlsHandler_)
@@ -66,6 +59,30 @@ bool TutlsController::showTutliWindow() const
     SetForegroundWindow(tutlsHandler_);
     // UpdateWindow(tutlsHandler_);
     return true;
+}
+
+bool TutlsController::tryFindTutliProcess()
+{
+    if(tutlsHandler_)
+    {
+        return false;
+    }
+
+    tutlsHandler_ = nullptr;
+
+    if(HWND hWnd = FindWindow(nullptr, cTutlsProcessName);
+            hWnd != nullptr)
+    {
+        tutlsHandler_ = hWnd;
+        return true;
+    }
+    log("Not found tutliClient");
+    return false;
+}
+
+HWND TutlsController::getTutliProcess() const
+{
+    return tutlsHandler_;
 }
 
 void TutlsController::zoomInMinimap() const

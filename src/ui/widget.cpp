@@ -10,7 +10,6 @@ Widget::Widget(QWidget *parent): QWidget(parent)
 
     wrk_thread.start();
     wrk.moveToThread(&wrk_thread);
-    connect(this, &Widget::startBattle, &wrk, &WORKER::startBattle);
     connect(this, &Widget::startProcess, &wrk, &WORKER::startProcess);
 
     emit startProcess();

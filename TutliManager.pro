@@ -25,6 +25,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++17
 
 SOURCES += \
+	src/core/basedetector.cpp \
+	src/core/mapnamedetector.cpp \
 	src/main.cpp \
 	src/core/mapsizedetector.cpp \
 	src/core/durationlogger.cpp \
@@ -34,6 +36,9 @@ SOURCES += \
 	src/ui/widget.cpp
 
 HEADERS += \
+	src/core/MapsData.h \
+	src/core/basedetector.h \
+	src/core/mapnamedetector.h \
 	src/core/mapsizedetector.h \
 	src/core/durationlogger.h \
 	src/core/logger.h \

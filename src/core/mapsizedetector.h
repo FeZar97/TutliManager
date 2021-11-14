@@ -4,6 +4,7 @@
 #include <opencv2/imgproc.hpp>
 
 /*
+ MapSizeDetector
  Класс для определния размеров карты
 */
 
@@ -31,15 +32,12 @@ class MapSizeDetector
     // матрица для сохранения результата матчинга
     cv::Mat currentMapMat_;
 
+private:
     // загрузка шаблонных картинок
     void loadMapHeadersTemplates();
 
 public:
     MapSizeDetector() { loadMapHeadersTemplates(); };
-
-    // поиск шаблона шапки карты в matWithMap и возвращение найденного размера
-    void detectMapSize(const cv::Mat & matWithMap,
-                       MapSizeIdx & mapSizeIdx, cv::Mat & currentMapMat);
 
     // реальный размер -> MapSizeIdx
     static MapSizeIdx mapSizeToIdx(const int mapSize);
@@ -49,6 +47,10 @@ public:
 
     // проверка корректности MapSizeIdx
     static bool isMapIdxCorrect(const MapSizeIdx mapSizeIdx);
+
+    // поиск шаблона шапки карты в matWithMap и возвращение найденного размера
+    void detectMapSize(const cv::Mat & matWithMap,
+                       MapSizeIdx & mapSizeIdx, cv::Mat & currentMapMat);
 };
 
 #endif // MAPSIZEDETECTOR_H
