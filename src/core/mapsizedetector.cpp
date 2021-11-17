@@ -10,8 +10,11 @@ void MapSizeDetector::loadMapHeadersTemplates()
 
     for (size_t i = 0; i < cMapSizesNb; i++)
     {
-        cv::imread("C:/FeZar97/TutliManager/src/res/mapsParts/" + std::to_string(cMapSizes[i]) + ".bmp").convertTo(mapHeaderTemplates_[i], CV_32FC4);
-        cv::cvtColor(mapHeaderTemplates_[i], mapHeaderTemplates_[i], cv::COLOR_BGRA2BGR);
+        cv::imread("C:/FeZar97/TutliManager/src/res/mapsParts/" + std::to_string(cMapSizes[i]) + ".png", cv::IMREAD_UNCHANGED)
+                .convertTo(mapHeaderTemplates_[i], CV_32FC4);
+
+        Logger::log("matWithMap mapHeaderTemplates_[i]: " + std::to_string(mapHeaderTemplates_[i].depth()));
+        Logger::log("matWithMap mapHeaderTemplates_[i]: " + cv::typeToString(mapHeaderTemplates_[i].type()));
     }
 }
 
@@ -56,11 +59,11 @@ void MapSizeDetector::detectMapSize(const cv::Mat & matWithMap,
         // выделение памяти под результат матчинга+
         currentMapMat_ = cv::Mat(cv::Size(cMaxMapSize - mapHeaderTemplate.size().width + 1,
                                           cMaxMapSize - mapHeaderTemplate.size().height + 1),
-                                 CV_32FC3); // TODO: избавить от CV_32FC3 (перейти на png файлы)
+                                 CV_32FC4);
 
         // ищем нужный шаблон
-        matchTemplate(matWithMap, mapHeaderTemplate, currentMapMat, cv::TM_CCORR_NORMED);
-        minMaxLoc(currentMapMat, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
+        matchTemplate(matWithMap, mapHeaderTemplate, currentMapMat_, cv::TM_CCORR_NORMED);
+        minMaxLoc(currentMapMat_, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
 
         // Logger::log("For map size " + std::to_string(mapHeaderTemplates_.size().width) + " match value: " + std::to_string(maxVal));
 

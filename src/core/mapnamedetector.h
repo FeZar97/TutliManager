@@ -12,10 +12,13 @@ enum MapSizeIdx;
 enum BaseDetectionResult;
 
 // максимильная относительная дистанция между базами (если базы находится в противоположных углах квадрата)
-const static float cMaxRBaseDistance{sqrtf(2.)};
+const static float cMaxRBaseDistance{sqrtf(2.f)};
 
 // порог относительного отклонения найденной базы от шаблонных относительных координат
 const static float cBaseRThreshold{0.01f};
+
+// порог для суммы ошибок по двум базам
+const static float cTwoBaseRThreshold{cBaseRThreshold * sqrtf(2.f)};
 
 /*
  MapNameDetector

@@ -11,15 +11,13 @@ void BaseDetector::loadBasesTemplates()
 
     for (size_t i = 0; i < cMapSizesNb; i++)
     {
-        // TODO убрать абсолютные пути, перейти на svg/png
-        cv::imread("C:/FeZar97/TutliManager/src/res/red_spawn/" + std::to_string(cMapSizes[i]) + ".bmp")
+        // TODO убрать абсолютные пути
+        cv::imread("C:/FeZar97/TutliManager/src/res/red_spawn/" + std::to_string(cMapSizes[i]) + ".png", cv::IMREAD_UNCHANGED)
                 .convertTo(enemyBaseTemplates_[i], CV_32FC4);
-        cv::cvtColor(enemyBaseTemplates_[i], enemyBaseTemplates_[i], cv::COLOR_BGRA2BGR);
 
-        // TODO убрать абсолютные пути, перейти на svg/png
-        cv::imread("C:/FeZar97/TutliManager/src/res/green_spawn/" + std::to_string(cMapSizes[i]) + ".bmp")
-                .convertTo(unionBaseTemplates_[i], CV_32FC4);
-        cv::cvtColor(unionBaseTemplates_[i], unionBaseTemplates_[i], cv::COLOR_BGRA2BGR);
+        // TODO убрать абсолютные пути
+        cv::imread("C:/FeZar97/TutliManager/src/res/green_spawn/" + std::to_string(cMapSizes[i]) + ".png", cv::IMREAD_UNCHANGED)
+                 .convertTo(unionBaseTemplates_[i], CV_32FC4);
     }
 }
 
@@ -62,10 +60,19 @@ BaseDetectionResult BaseDetector::detectBases(const cv::Mat & map, const MapSize
 
     // инициализация для сохранения результата
     basesMatchMapMat_ = cv::Mat(cv::Size(curMapSize - curBaseSize + 1, curMapSize - curBaseSize + 1),
-                                CV_32FC3);
+                                CV_32FC4);
 
     double minVal, enemyMaxVal, unionMaxVal;
     cv::Point minLoc, enemyMaxLoc, unionMaxLoc;
+
+    Logger::log("map depth: " + std::to_string(map.depth()));
+    Logger::log("map type: " + cv::typeToString(map.type()));
+
+    Logger::log("enemyBaseTemplate depth: " + std::to_string(enemyBaseTemplate.depth()));
+    Logger::log("enemyBaseTemplate type: " + cv::typeToString(enemyBaseTemplate.type()));
+
+    Logger::log("basesMatchMapMat_ depth: " + std::to_string(basesMatchMapMat_.depth()));
+    Logger::log("basesMatchMapMat_ type: " + cv::typeToString(basesMatchMapMat_.type()));
 
 // match enemy base
     matchTemplate(map, enemyBaseTemplate, basesMatchMapMat_, cv::TM_CCORR_NORMED);

@@ -101,10 +101,9 @@ bool WORKER::makeScreenshot()
                         .arg(QTime::currentTime().toString("hh_mm_ss"));
 
     captureScreenMat(tutlsProcessHandler).convertTo(lastScreen_, CV_32FC4);
-    cv::cvtColor(lastScreen_, lastScreen_, cv::COLOR_BGRA2BGR);
 
     // save origin
-    // imwrite(curBaseFileName.toStdString() + "_origin.bmp", lastScreen);
+    // imwrite(curBaseFileName.toStdString() + "_origin.png", lastScreen);
 
     return true;
 }
@@ -114,13 +113,13 @@ void WORKER::process()
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     qint64 dt = timestamp - lastProcessTimestamp;
 
-    if(dt < 150)
+    if(dt < 200)
     {
         QThread::msleep(dt);
         return;
     }
 
-    Logger::log("New prcoess cycle");
+    Logger::log("-------------------------------------------------");
     lastProcessTimestamp = timestamp;
     tutlsController_.tryFindTutliProcess();
 
@@ -153,8 +152,11 @@ void WORKER::process()
                                                      // времянка для собирания баз
                                                      curMapRelativeCoords);
 
+    Logger::log("Map name detection result: " + MapNameDetector::mapNameToStr(currentMapName_));
+
     // нужно для собирания относительных координат баз
-    if (basesDetectionResult_ == BaseDetectionResult::BothBases)
+    if (basesDetectionResult_ == BaseDetectionResult::BothBases
+        && currentMapName_ == MapName::UNKNOWN_MAP_NAME)
     {
         Logger::log("Both bases are successfull detected");
 

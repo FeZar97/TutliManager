@@ -1,22 +1,22 @@
 <RCC>
     <qresource prefix="/">
-        <file>res/mapsParts/227.bmp</file>
-        <file>res/mapsParts/277.bmp</file>
-        <file>res/mapsParts/327.bmp</file>
-        <file>res/mapsParts/407.bmp</file>
-        <file>res/mapsParts/507.bmp</file>
-        <file>res/mapsParts/627.bmp</file>
-        <file>res/green_spawn/227.bmp</file>
-        <file>res/green_spawn/277.bmp</file>
-        <file>res/green_spawn/327.bmp</file>
-        <file>res/green_spawn/407.bmp</file>
-        <file>res/green_spawn/507.bmp</file>
-        <file>res/green_spawn/627.bmp</file>
-        <file>res/red_spawn/227.bmp</file>
-        <file>res/red_spawn/277.bmp</file>
-        <file>res/red_spawn/327.bmp</file>
-        <file>res/red_spawn/407.bmp</file>
-        <file>res/red_spawn/507.bmp</file>
-        <file>res/red_spawn/627.bmp</file>
+        <file>res/green_spawn/227.png</file>
+        <file>res/green_spawn/277.png</file>
+        <file>res/green_spawn/327.png</file>
+        <file>res/green_spawn/407.png</file>
+        <file>res/green_spawn/507.png</file>
+        <file>res/green_spawn/627.png</file>
+        <file>res/red_spawn/227.png</file>
+        <file>res/red_spawn/277.png</file>
+        <file>res/red_spawn/327.png</file>
+        <file>res/red_spawn/407.png</file>
+        <file>res/red_spawn/507.png</file>
+        <file>res/red_spawn/627.png</file>
+        <file>res/mapsParts/227.png</file>
+        <file>res/mapsParts/277.png</file>
+        <file>res/mapsParts/327.png</file>
+        <file>res/mapsParts/407.png</file>
+        <file>res/mapsParts/507.png</file>
+        <file>res/mapsParts/627.png</file>
     </qresource>
 </RCC>

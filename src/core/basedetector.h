@@ -45,7 +45,7 @@ private:
     void loadBasesTemplates();
 
 public:
-    BaseDetector() {};
+    BaseDetector() { loadBasesTemplates(); };
 
     // размер базы -> MapSizeIdx
     static MapSizeIdx baseSizeToMapSizeIdx(const int baseSize);

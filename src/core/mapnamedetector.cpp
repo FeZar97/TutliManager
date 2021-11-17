@@ -121,7 +121,7 @@ MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPo
             // если для карты еще нет сохраненных координат
             if (rCoordsMap.empty())
             {
-                Logger::log("For map " + mapNameToStr(curMapName) + " not exist relative coords");
+                // Logger::log("For map " + mapNameToStr(curMapName) + " not exist relative coords");
                 continue;
             }
 
@@ -138,6 +138,42 @@ MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPo
                       distance21 = QLineF(secondBaseRCoord, curMapBasesRCoords.p1()).length(),
                       distance22 = QLineF(secondBaseRCoord, curMapBasesRCoords.p2()).length();
 
+                // здесь надо рассмотреть два исхода:
+                // 1) отображение firstBaseRCoord  -> curMapBasesRCoords.p1()
+                //                secondBaseRCoord -> curMapBasesRCoords.p2()
+                // error1 = sqrt(distance11^2 + distance22^2)
+
+                //
+                // 2) отображение firstBaseRCoord  -> curMapBasesRCoords.p2()
+                //                secondBaseRCoord -> curMapBasesRCoords.p1()
+                // error2 = sqrt(distance12^2 + distance21^2)
+
+                // решение принимается по минимальной ошибке (максимальное правдоподобие)
+                float error1 = sqrtf(distance11 * distance11 + distance22 * distance22),
+                      error2 = sqrtf(distance12 * distance12 + distance21 * distance21);
+
+                if (error1 < error2 && error1 <= cTwoBaseRThreshold)
+                {
+                    minRDistance1 = distance11;
+                    minRDistance2 = distance22;
+                    bestMapNameMatch = curMapName;
+                }
+                else if (error2 <= error1 && error2 <= cTwoBaseRThreshold)
+                {
+                    minRDistance1 = distance21;
+                    minRDistance2 = distance12;
+                    bestMapNameMatch = curMapName;
+                }
+                // стремный случай, такого не должно быть
+                // else
+                // {
+                //     Logger::log("Unavailable case for map " + mapNameToStr(curMapName)
+                //                 + ", size " + std::to_string(curMapSize) + ", input coords: "
+                //                 + "p1{" + std::to_string(firstBaseRCoord.x())  + ", " + std::to_string(firstBaseRCoord.y())  + "}, "
+                //                 + "p2{" + std::to_string(secondBaseRCoord.x()) + ", " + std::to_string(secondBaseRCoord.y()) + "}");
+                // }
+
+                /*
                 // "векторы коллинеарны и ~равны"
                 if ( (distance11 <= distance21) && (distance22 <= distance12)
                      && (distance11 < minRDistance1) && (distance22 < minRDistance2) )
@@ -162,6 +198,7 @@ MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPo
                                 + "p1{" + std::to_string(firstBaseRCoord.x())  + ", " + std::to_string(firstBaseRCoord.y())  + "}, "
                                 + "p2{" + std::to_string(secondBaseRCoord.x()) + ", " + std::to_string(secondBaseRCoord.y()) + "}");
                 }
+                */
             }
             // если не существует такой размер надо громко ругнуться
             else
@@ -213,7 +250,7 @@ MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPo
             // если для карты еще нет сохраненных координат
             if (rCoordsMap.empty())
             {
-                Logger::log("For map " + mapNameToStr(curMapName) + " not exist relative coords");
+                // Logger::log("For map " + mapNameToStr(curMapName) + " not exist relative coords");
                 continue;
             }
 
