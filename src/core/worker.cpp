@@ -6,7 +6,9 @@
 
 #include "worker.h"
 
-WORKER::WORKER() {}
+WORKER::WORKER() {
+    drawAndSaveBases();
+}
 
 // https://superkogito.github.io/blog/CaptureScreenUsingOpenCv.html
 BITMAPINFOHEADER WORKER::createBitmapHeader(int width, int height)
@@ -67,6 +69,44 @@ cv::Mat WORKER::captureScreenMat(HWND hwnd)
     return src;
 }
 
+void WORKER::drawAndSaveBases()
+{
+    int sideSize = 1000;
+    cv::Mat resultMat = cv::Mat(sideSize, sideSize, CV_8UC3);
+
+    // проход по всем картам
+    for (const MapNameWithRCoords & mapData: cBasesRelativeCoords)
+    {
+        const RCoordsMap & rCoordsMap = mapData.second;
+
+        // если для карты еще нет сохраненных координат
+        if (rCoordsMap.empty())
+        {
+            continue;
+        }
+        const std::string mapName = MapNameDetector::mapNameToStr(mapData.first);
+        const QLineF & maxPrecisionCoords = rCoordsMap.at(cMapSizes.back());
+
+        int rCh = ((-mapName[0])), //  -  47.) / 32.) * 255.,
+            gCh = ((-mapName[1])), //  - 104.) / 32.) * 255.,
+            bCh = ((-mapName[2])); //  - 104.) / 32.) * 255.;
+
+        Logger::log("Scalar for " + mapName + ": ("
+                    + std::to_string(rCh) + ", "
+                    + std::to_string(gCh) + ", "
+                    + std::to_string(bCh) + ")");
+
+        cv::line(resultMat,
+                 {static_cast<int>(maxPrecisionCoords.x1() * sideSize), static_cast<int>(maxPrecisionCoords.y1() * sideSize)},
+                 {static_cast<int>(maxPrecisionCoords.x2() * sideSize), static_cast<int>(maxPrecisionCoords.y2() * sideSize)},
+                 cv::Scalar(rCh, gCh, bCh),
+                 1,
+                 cv::LINE_AA);
+    }
+
+    imwrite(std::string(TUTLBOT_HOME_DIR) + "lines.bmp", resultMat);
+}
+
 void WORKER::startProcess()
 {
     lastProcessTimestamp = QDateTime::currentMSecsSinceEpoch();
@@ -113,7 +153,7 @@ void WORKER::process()
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     qint64 dt = timestamp - lastProcessTimestamp;
 
-    if(dt < 200)
+    if(dt < 1500)
     {
         QThread::msleep(dt);
         return;
@@ -128,31 +168,23 @@ void WORKER::process()
         return;
     }
 
-    // максимальная область карты
-    int maxMapSize = cMapSizes.back();
-    mapAreaMat_ = lastScreen_({lastScreen_.size().width - maxMapSize,
-                               lastScreen_.size().height - maxMapSize,
-                               maxMapSize,
-                               maxMapSize});
-
     // определение размеров карты
-    mapSizeDetector_.detectMapSize(mapAreaMat_, currentMapSizeIdx_, currentMapMat_);
-
-    if (!MapSizeDetector::isMapIdxCorrect(currentMapSizeIdx_))
-    {
-        return;
-    }
+    // передаем всю карту и ищем в ней шаблоны шапок
+    mapSizeDetector_.detectMapSize(lastScreen_, currentMapSizeIdx_, currentMapMat_);
 
     // поиск баз на текущей карте
-    basesDetectionResult_ = baseDetector_.detectBases(currentMapMat_, currentMapSizeIdx_, basesLine_);
+    baseDetector_.detectBases(currentMapMat_, currentMapSizeIdx_, basesLine_, basesDetectionResult_);
 
     // определение названия текущей карты
-    currentMapName_ = mapNameDetector_.detectMapName(basesLine_.p1(), basesLine_.p2(),
-                                                     currentMapSizeIdx_, basesDetectionResult_,
-                                                     // времянка для собирания баз
-                                                     curMapRelativeCoords);
+    mapNameDetector_.detectMapName(basesLine_.p1(), basesLine_.p2(), currentMapSizeIdx_, basesDetectionResult_,
+                                   currentMapName_,
+                                   // времянка для собирания баз
+                                   curMapRelativeCoords);
 
     Logger::log("Map name detection result: " + MapNameDetector::mapNameToStr(currentMapName_));
+
+    // ui
+    emit setMapParams(currentMapSizeIdx_, currentMapName_);
 
     // нужно для собирания относительных координат баз
     if (basesDetectionResult_ == BaseDetectionResult::BothBases
@@ -165,7 +197,7 @@ void WORKER::process()
         // пытаемся зумить карту пока есть неизвестные координаты
         if (curMapRelativeCoords.size() != cMapSizesNb)
         {
-            // define orderMapScaleIteration
+            // определяем направление зума
             if (curMapSize == cMapSizes.back())
             {
                 zoomInIterations = false;
@@ -175,7 +207,6 @@ void WORKER::process()
                 zoomInIterations = true;
             }
 
-            // apply order
             if (zoomInIterations)
             {
                 tutlsController_.zoomInMinimap();

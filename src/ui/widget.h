@@ -18,6 +18,9 @@ public:
     WORKER   wrk;
     QThread  wrk_thread;
 
+public slots:
+    void updateUiParams(const MapSizeIdx mapSize, const MapName mapName);
+
 signals:
     void startProcess();
 };

@@ -32,6 +32,10 @@ class MapSizeDetector
     // матрица для сохранения результата матчинга
     cv::Mat currentMapMat_;
 
+    // область от карты, приходящей во входных параметрах,
+    // в которой может располагаться шапка карты с ДАННЫМ РАЗМЕРОМ
+    cv::Mat currentMapPotentionalHeader_;
+
 private:
     // загрузка шаблонных картинок
     void loadMapHeadersTemplates();
@@ -48,8 +52,8 @@ public:
     // проверка корректности MapSizeIdx
     static bool isMapIdxCorrect(const MapSizeIdx mapSizeIdx);
 
-    // поиск шаблона шапки карты в matWithMap и возвращение найденного размера
-    void detectMapSize(const cv::Mat & matWithMap,
+    // поиск шаблона шапки карты в lastScreen и возвращение найденного размера
+    void detectMapSize(const cv::Mat & lastScreen,
                        MapSizeIdx & mapSizeIdx, cv::Mat & currentMapMat);
 };
 

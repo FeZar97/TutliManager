@@ -96,14 +96,19 @@ std::string MapNameDetector::mapNameToStr(const MapName mapName)
     }
 }
 
-MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPointF &secondBaseRCoord,
-                                       const MapSizeIdx mapSizeIdx, const BaseDetectionResult baseDetectionResult,
-                                       // времянка для собирания баз
-                                       std::map<int, std::pair<QPointF, QPointF>> & curMapRelativeCoords)
+void MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPointF &secondBaseRCoord,
+                                    const MapSizeIdx mapSizeIdx, const BaseDetectionResult baseDetectionResult,
+                                    MapName & resultMapName,
+                                    // времянка для собирания баз
+                                    std::map<int, std::pair<QPointF, QPointF>> & curMapRelativeCoords)
 {
     DurationLogger durationLogger("MapNameDetector::detectMapName");
 
+    resultMapName = MapName::UNKNOWN_MAP_NAME;
+
     int curMapSize = MapSizeDetector::mapIdxToSize(mapSizeIdx);
+
+    // Logger::log("BaseDetectionResult: " + BaseDetector::detectRes2Str(baseDetectionResult));
 
     // случай когда найдены обе базы
     if (baseDetectionResult == BaseDetectionResult::BothBases)
@@ -164,41 +169,6 @@ MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPo
                     minRDistance2 = distance12;
                     bestMapNameMatch = curMapName;
                 }
-                // стремный случай, такого не должно быть
-                // else
-                // {
-                //     Logger::log("Unavailable case for map " + mapNameToStr(curMapName)
-                //                 + ", size " + std::to_string(curMapSize) + ", input coords: "
-                //                 + "p1{" + std::to_string(firstBaseRCoord.x())  + ", " + std::to_string(firstBaseRCoord.y())  + "}, "
-                //                 + "p2{" + std::to_string(secondBaseRCoord.x()) + ", " + std::to_string(secondBaseRCoord.y()) + "}");
-                // }
-
-                /*
-                // "векторы коллинеарны и ~равны"
-                if ( (distance11 <= distance21) && (distance22 <= distance12)
-                     && (distance11 < minRDistance1) && (distance22 < minRDistance2) )
-                {
-                    minRDistance1 = distance11;
-                    minRDistance2 = distance22;
-                    bestMapNameMatch = curMapName;
-                }
-                // "векторы противонаправлены и ~равны"
-                else if ( (distance21 <= distance11) && (distance12 <= distance22)
-                          && (distance21 < minRDistance1) && (distance12 < minRDistance2) )
-                {
-                    minRDistance1 = distance21;
-                    minRDistance2 = distance12;
-                    bestMapNameMatch = curMapName;
-                }
-                // стремный случай, такого не должно быть
-                else
-                {
-                    Logger::log("Unavailable case for map " + mapNameToStr(curMapName)
-                                + ", size " + std::to_string(curMapSize) + ", input coords: "
-                                + "p1{" + std::to_string(firstBaseRCoord.x())  + ", " + std::to_string(firstBaseRCoord.y())  + "}, "
-                                + "p2{" + std::to_string(secondBaseRCoord.x()) + ", " + std::to_string(secondBaseRCoord.y()) + "}");
-                }
-                */
             }
             // если не существует такой размер надо громко ругнуться
             else
@@ -231,9 +201,9 @@ MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPo
         }
 
         // оба расстояние должны пройти по порогу
-        return ( (minRDistance1 > cBaseRThreshold) && (minRDistance2 > cBaseRThreshold) )
-                ? UNKNOWN_MAP_NAME
-                : bestMapNameMatch;
+        resultMapName = ( (minRDistance1 > cBaseRThreshold) && (minRDistance2 > cBaseRThreshold) )
+                        ? UNKNOWN_MAP_NAME
+                        : bestMapNameMatch;
     }
     // найдена одна из баз (secondBaseRCoord при этом не нужна)
     else if (baseDetectionResult == BaseDetectionResult::OneOfBase)
@@ -279,9 +249,8 @@ MapName MapNameDetector::detectMapName(const QPointF &firstBaseRCoord, const QPo
             }
         }
 
-        return minRDistance > cBaseRThreshold ? UNKNOWN_MAP_NAME : bestMapNameMatch;
+        resultMapName = (minRDistance > cBaseRThreshold)
+                        ? UNKNOWN_MAP_NAME
+                        : bestMapNameMatch;
     }
-
-    // невозможно определить название карты
-    return UNKNOWN_MAP_NAME;
 }

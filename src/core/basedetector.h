@@ -53,12 +53,14 @@ public:
     // MapSizeIdx -> размер базы
     static int mapIdxToBaseSize(const MapSizeIdx mapSizeIdx);
 
-    // метод определния расположения баз, возвращает результат поиска
+    static std::string detectRes2Str(const BaseDetectionResult detectRes);
+
+    // метод определния расположения баз
     // в basesLine сохранятется линия с относительными координатами баз
     // если одна из баз не найдена, то в basesLine первой точкой будет найденная база
     //                                      а второй - cInvalidBaseCoords
-    BaseDetectionResult detectBases(const cv::Mat & map, const MapSizeIdx mapSizeIdx,
-                                    QLineF & basesLine);
+    void detectBases(const cv::Mat & map, const MapSizeIdx mapSizeIdx,
+                     QLineF & basesLine, BaseDetectionResult &detectionResult);
 };
 
 #endif // BASEDETECTOR_H

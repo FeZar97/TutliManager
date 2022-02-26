@@ -39,9 +39,31 @@ int BaseDetector::mapIdxToBaseSize(const MapSizeIdx mapSizeIdx)
     return MapSizeDetector::isMapIdxCorrect(mapSizeIdx) ? cBaseSizes.at(mapSizeIdx) : -1;
 }
 
-BaseDetectionResult BaseDetector::detectBases(const cv::Mat & map, const MapSizeIdx mapSizeIdx,
-                                             QLineF & basesLine)
+std::string BaseDetector::detectRes2Str(const BaseDetectionResult detectRes)
 {
+    switch (detectRes)
+    {
+    case BaseDetectionResult::BothBases:
+        return "Both bases detected";
+    case BaseDetectionResult::OneOfBase:
+        return "One base detected";
+    default:
+    case BaseDetectionResult::NoneBase:
+        return "None base detected";
+    }
+}
+
+void BaseDetector::detectBases(const cv::Mat & map, const MapSizeIdx mapSizeIdx,
+                                             QLineF & basesLine, BaseDetectionResult &detectionResult)
+{
+    detectionResult = BaseDetectionResult::NoneBase;
+
+    // если не удалось определить размер
+    if (!MapSizeDetector::isMapIdxCorrect(mapSizeIdx))
+    {
+        return;
+    }
+
     DurationLogger durationLogger("BaseDetector::detectBases");
 
     int curMapSize = MapSizeDetector::mapIdxToSize(mapSizeIdx);
@@ -64,15 +86,6 @@ BaseDetectionResult BaseDetector::detectBases(const cv::Mat & map, const MapSize
 
     double minVal, enemyMaxVal, unionMaxVal;
     cv::Point minLoc, enemyMaxLoc, unionMaxLoc;
-
-    Logger::log("map depth: " + std::to_string(map.depth()));
-    Logger::log("map type: " + cv::typeToString(map.type()));
-
-    Logger::log("enemyBaseTemplate depth: " + std::to_string(enemyBaseTemplate.depth()));
-    Logger::log("enemyBaseTemplate type: " + cv::typeToString(enemyBaseTemplate.type()));
-
-    Logger::log("basesMatchMapMat_ depth: " + std::to_string(basesMatchMapMat_.depth()));
-    Logger::log("basesMatchMapMat_ type: " + cv::typeToString(basesMatchMapMat_.type()));
 
 // match enemy base
     matchTemplate(map, enemyBaseTemplate, basesMatchMapMat_, cv::TM_CCORR_NORMED);
@@ -116,19 +129,17 @@ BaseDetectionResult BaseDetector::detectBases(const cv::Mat & map, const MapSize
     // найдены обе базы
     if (isDistanceThresholdCorrect)
     {
-        return BothBases;
+        detectionResult = BothBases;
     }
     // найдена вражеская база
     else if (isEnemyBaseDetectSuccess)
     {
         basesLine = {enemyBaseCenterRCoords, cInvalidBaseCoords};
-        return OneOfBase;
+        detectionResult = OneOfBase;
     }
     else if (isUnionBaseDetectSuccess)
     {
         basesLine = {unionBaseCenterRCoords, cInvalidBaseCoords};
-        return OneOfBase;
+        detectionResult = OneOfBase;
     }
-    // базы не найдены
-    return NoneBase;
 }

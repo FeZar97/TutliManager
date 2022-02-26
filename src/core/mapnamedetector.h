@@ -34,10 +34,11 @@ public:
 
     // метод определния название карты по относительным координатам баз
     // возвращает имя карты в виде элемента перечисления MapName
-    static MapName detectMapName(const QPointF & firstBaseRCoord, const QPointF & secondBaseRCoord,
-                                 const MapSizeIdx mapSizeIdx, const BaseDetectionResult baseDetectionResult,
-                                 // времянка для собирания баз
-                                 std::map<int, std::pair<QPointF, QPointF>> & curMapRelativeCoords);
+    static void detectMapName(const QPointF & firstBaseRCoord, const QPointF & secondBaseRCoord,
+                              const MapSizeIdx mapSizeIdx, const BaseDetectionResult baseDetectionResult,
+                              MapName & resultMapName,
+                              // времянка для собирания баз
+                              std::map<int, std::pair<QPointF, QPointF>> & curMapRelativeCoords);
 };
 
 #endif // MAPNAMEDETECTOR_H

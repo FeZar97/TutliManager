@@ -12,9 +12,8 @@ void MapSizeDetector::loadMapHeadersTemplates()
     {
         cv::imread("C:/FeZar97/TutliManager/src/res/mapsParts/" + std::to_string(cMapSizes[i]) + ".png", cv::IMREAD_UNCHANGED)
                 .convertTo(mapHeaderTemplates_[i], CV_32FC4);
-
-        Logger::log("matWithMap mapHeaderTemplates_[i]: " + std::to_string(mapHeaderTemplates_[i].depth()));
-        Logger::log("matWithMap mapHeaderTemplates_[i]: " + cv::typeToString(mapHeaderTemplates_[i].type()));
+        // Logger::log("matWithMap mapHeaderTemplates_[i]: " + std::to_string(mapHeaderTemplates_[i].depth()));
+        // Logger::log("matWithMap mapHeaderTemplates_[i]: " + cv::typeToString(mapHeaderTemplates_[i].type()));
     }
 }
 
@@ -42,7 +41,7 @@ bool MapSizeDetector::isMapIdxCorrect(const MapSizeIdx mapSizeIdx)
     return (mapSizeIdx >=0 && static_cast<size_t>(mapSizeIdx) < cMapSizes.size());
 }
 
-void MapSizeDetector::detectMapSize(const cv::Mat & matWithMap,
+void MapSizeDetector::detectMapSize(const cv::Mat & lastScreen,
                                     MapSizeIdx & mapSizeIdx, cv::Mat & currentMapMat)
 {
     DurationLogger durationLogger("MapSizeDetector::detectMapSize");
@@ -56,13 +55,26 @@ void MapSizeDetector::detectMapSize(const cv::Mat & matWithMap,
     int curTemplateIdx = 0;
     for (const auto &mapHeaderTemplate: mapHeaderTemplates_)
     {
-        // выделение памяти под результат матчинга+
-        currentMapMat_ = cv::Mat(cv::Size(cMaxMapSize - mapHeaderTemplate.size().width + 1,
-                                          cMaxMapSize - mapHeaderTemplate.size().height + 1),
+        int curPotentialMapSize = mapIdxToSize(static_cast<MapSizeIdx>(curTemplateIdx));
+
+        // DurationLogger durationLogger("MapSizeDetector::detectMapSize::compareWithTemplate_" + std::to_string(curPotentialMapSize));
+
+        // копируем кусок карты с той областью, где может быть шапка ДЛЯ ТЕКУЩЕГО РАЗМЕРА
+        int startX = lastScreen.size().width - curPotentialMapSize,
+            startY = lastScreen.size().height - curPotentialMapSize;
+        currentMapPotentionalHeader_ = lastScreen({startX - 5,
+                                                   startY - 5,
+                                                   mapHeaderTemplate.size().width + 5,
+                                                   mapHeaderTemplate.size().height + 5});
+
+        // выделение памяти под результат матчинга
+        // ищем в вырезанном куске currentMapPotentionalHeader_ шаблон для текущего размера
+        currentMapMat_ = cv::Mat(cv::Size(currentMapPotentionalHeader_.size().width - mapHeaderTemplate.size().width + 1,
+                                          currentMapPotentionalHeader_.size().height - mapHeaderTemplate.size().height + 1),
                                  CV_32FC4);
 
         // ищем нужный шаблон
-        matchTemplate(matWithMap, mapHeaderTemplate, currentMapMat_, cv::TM_CCORR_NORMED);
+        matchTemplate(currentMapPotentionalHeader_, mapHeaderTemplate, currentMapMat_, cv::TM_CCORR_NORMED);
         minMaxLoc(currentMapMat_, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
 
         // Logger::log("For map size " + std::to_string(mapHeaderTemplates_.size().width) + " match value: " + std::to_string(maxVal));
@@ -77,18 +89,19 @@ void MapSizeDetector::detectMapSize(const cv::Mat & matWithMap,
         curTemplateIdx++;
     }
 
+    // сохраняем лучший размер
     mapSizeIdx = bestMapSizeIdx;
 
-    // на данном этапе должен быть известен currentMapSizeIdx
+    // на данном этапе должен быть известен bestMapSizeIdx
     if (isMapIdxCorrect(bestMapSizeIdx))
     {
         // Logger::log("Best match for size " + std::to_string(currentMapSize) + " with match result " + std::to_string(bestMatchVal));
-        Logger::log("Current map size: " + std::to_string(mapIdxToSize(mapSizeIdx)));
+        Logger::log("Current map size: " + std::to_string(mapIdxToSize(bestMapSizeIdx)));
 
         // сохранение текущей карты в Mat
         int currentMapSize = mapIdxToSize(bestMapSizeIdx);
-        currentMapMat = matWithMap({matWithMap.size().width - currentMapSize,
-                                    matWithMap.size().height - currentMapSize,
+        currentMapMat = lastScreen({lastScreen.size().width - currentMapSize,
+                                    lastScreen.size().height - currentMapSize,
                                     currentMapSize,
                                     currentMapSize});
     }

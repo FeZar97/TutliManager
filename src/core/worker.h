@@ -29,7 +29,6 @@ public:
     MapNameDetector         mapNameDetector_;
 
     cv::Mat                 lastScreen_; // последний скрин окна тутлов
-    cv::Mat                 mapAreaMat_; // максимальная область с картой (627х627)
 
     // для mapSizeDetector_
     cv::Mat                 currentMapMat_; // текущая карта
@@ -59,8 +58,13 @@ public:
     BITMAPINFOHEADER        createBitmapHeader(int width, int height);
     cv::Mat                 captureScreenMat(HWND hwnd);
 
+    void                    drawAndSaveBases();
+
 public slots:
     void                    startProcess();
+
+signals:
+    void setMapParams(const MapSizeIdx mapSize, const MapName mapName);
 };
 
 #endif // WORKER_H
