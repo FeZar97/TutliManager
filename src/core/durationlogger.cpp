@@ -1,4 +1,5 @@
 #include "durationlogger.h"
+#include <string>
 
 DurationLogger::DurationLogger(const std::string name)
 {

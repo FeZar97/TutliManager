@@ -3,8 +3,6 @@
 
 #include "logger.h"
 
-/*
-*/
 class DurationLogger
 {
     std::string measuredEntityName{""};

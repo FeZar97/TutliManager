@@ -70,7 +70,7 @@ bool TutlsController::tryFindTutliProcess()
 
     tutlsHandler_ = nullptr;
 
-    if(HWND hWnd = FindWindow(nullptr, cTutlsProcessName);
+    if(HWND hWnd = FindWindowW(nullptr, TEXT(cTutlsProcessName));
             hWnd != nullptr)
     {
         tutlsHandler_ = hWnd;
