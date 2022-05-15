@@ -117,6 +117,11 @@ void WORKER::startProcess()
     }
 }
 
+void WORKER::onMoveRecieved(const MovingDirection direction, const bool active)
+{
+    tutlsController_.processMoving(direction, active);
+}
+
 // скрин+бан
 bool WORKER::makeScreenshot()
 {
@@ -171,6 +176,15 @@ void WORKER::process()
     // определение размеров карты
     // передаем всю карту и ищем в ней шаблоны шапок
     mapSizeDetector_.detectMapSize(lastScreen_, currentMapSizeIdx_, currentMapMat_);
+
+    if (MapSizeDetector::isMapIdxCorrect(currentMapSizeIdx_))
+    {
+        cv::Mat tempMapMat = cv::Mat(cv::Size(currentMapMat_.size().width, currentMapMat_.size().height ), CV_8UC4);
+        currentMapMat_.convertTo(tempMapMat, CV_8UC4);
+
+        QImage image( tempMapMat.data, tempMapMat.cols, tempMapMat.rows, static_cast<int>(tempMapMat.step), QImage::Format_ARGB32 );
+        emit plotCurMapPixmap(QPixmap::fromImage(image));
+    }
 
     // поиск баз на текущей карте
     baseDetector_.detectBases(currentMapMat_, currentMapSizeIdx_, basesLine_, basesDetectionResult_);

@@ -107,30 +107,18 @@ void TutlsController::zoomOutMinimap() const
     SendKyboardEvent(VK_OEM_MINUS, false);
 }
 
-void TutlsController::startMoving(const MovingDirection direction) const
+void TutlsController::processMoving(const MovingDirection direction, bool active) const
 {
+    Logger::log("[TutlsController] Try processMoving");
     if(!showTutliWindow())
     {
         return;
     }
 
-    Logger::log("Send start moving direction command: " + directionToStr(direction).toStdString());
+    Logger::log("Send moving direction command: " + directionToStr(direction).toStdString());
 
-    SendKyboardEvent(directionToVkKey(direction), true);
+    SendKyboardEvent(directionToVkKey(direction), active);
 }
-
-void TutlsController::stopMoving(const MovingDirection direction) const
-{
-    if(!showTutliWindow())
-    {
-        return;
-    }
-
-    Logger::log("Send stop moving direction command: " + directionToStr(direction).toStdString());
-
-    SendKyboardEvent(directionToVkKey(direction), false);
-}
-
 
 /*
 // посылает нажатие или отпускание клавиши со сканкодом scan

@@ -12,8 +12,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET("OpenCV_DIR" "${CMAKE_CURRENT_SOURCE_DIR}\\..\\opencv\\build_opencv")
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Gui Widgets WinExtras REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets WinExtras REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Gui Quick Widgets WinExtras REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Quick Widgets WinExtras REQUIRED)
 find_package(OpenCV REQUIRED)
 
 MESSAGE(STATUS "Include dirs ${OpenCV_INCLUDE_DIRS}")
@@ -32,6 +32,7 @@ add_executable(TutliManager
 target_link_libraries(TutliManager
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
+    Qt${QT_VERSION_MAJOR}::Quick
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::WinExtras
     ${OpenCV_LIBS}

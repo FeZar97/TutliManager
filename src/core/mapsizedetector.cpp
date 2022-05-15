@@ -33,7 +33,7 @@ MapSizeIdx MapSizeDetector::mapSizeToIdx(const int mapSize)
 
 int MapSizeDetector::mapIdxToSize(const MapSizeIdx mapSizeIdx)
 {
-    return isMapIdxCorrect(mapSizeIdx) ? cMapSizes.at(mapSizeIdx) : -1;
+    return isMapIdxCorrect(mapSizeIdx) ? cMapSizes.at(mapSizeIdx) : cMapSizes.at(0);
 }
 
 bool MapSizeDetector::isMapIdxCorrect(const MapSizeIdx mapSizeIdx)

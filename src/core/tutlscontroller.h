@@ -3,16 +3,8 @@
 
 #include <windows.h>
 #include <WinUser.h>
-
-class QString;
-
-enum class MovingDirection
-{
-    Forward,
-    Back,
-    Left,
-    Right
-};
+#include <QString>
+#include "Helper.h"
 
 const static LPCWSTR cTutlsProcessName{L"WoT Client"};
 
@@ -38,8 +30,7 @@ public:
     void zoomOutMinimap() const;
 
     // mooving  actions
-    void startMoving(const MovingDirection direction) const;
-    void stopMoving(const MovingDirection direction) const;
+    void processMoving(const MovingDirection direction, bool active) const;
 };
 
 #endif // TUTLSCONTROLLER_H
